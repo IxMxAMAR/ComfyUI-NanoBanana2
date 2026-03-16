@@ -29,7 +29,7 @@ Documentation = "https://github.com/IxMxAMAR/ComfyUI-NanoBanana2/wiki"
 "Bug Tracker" = "https://github.com/IxMxAMAR/ComfyUI-NanoBanana2/issues"
 
 [tool.comfy]
-PublisherId = ""
+PublisherId = "@ixmxamar"
 DisplayName = "ComfyUI-NanoBanana2"
 Icon = ""
 includes = [] 
