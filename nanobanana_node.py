@@ -131,6 +131,13 @@ class NanoBanana2MultiRef:
                 "reference_images_2": ("IMAGE",),
                 "reference_images_3": ("IMAGE",),
                 "reference_images_4": ("IMAGE",),
+                "reference_images_5": ("IMAGE",),
+                "reference_images_6": ("IMAGE",),
+                "reference_images_7": ("IMAGE",),
+                "reference_images_8": ("IMAGE",),
+                "reference_images_9": ("IMAGE",),
+                "reference_images_10": ("IMAGE",),
+                "text_file_path": ("STRING", {"default": ""}),
             }
         }
 
@@ -172,7 +179,14 @@ class NanoBanana2MultiRef:
         reference_images_1=None,
         reference_images_2=None,
         reference_images_3=None,
-        reference_images_4=None
+        reference_images_4=None,
+        reference_images_5=None,
+        reference_images_6=None,
+        reference_images_7=None,
+        reference_images_8=None,
+        reference_images_9=None,
+        reference_images_10=None,
+        text_file_path=None
     ):
         if not api_key:
             raise ValueError("Gemini API Key is required.")
@@ -182,7 +196,11 @@ class NanoBanana2MultiRef:
         parts = []
         
         # --- Process Reference Images ---
-        ref_inputs = [reference_images_1, reference_images_2, reference_images_3, reference_images_4]
+        ref_inputs = [
+            reference_images_1, reference_images_2, reference_images_3, reference_images_4,
+            reference_images_5, reference_images_6, reference_images_7, reference_images_8,
+            reference_images_9, reference_images_10
+        ]
         ref_count = 1
         
         for tensor_batch in ref_inputs:
@@ -203,12 +221,34 @@ class NanoBanana2MultiRef:
                 except Exception as e:
                     print(f"Error processing reference image {ref_count}: {e}")
 
-        # --- Main Prompt ---
+        # --- Main Prompt & Text Reference ---
         final_prompt = prompt
         if ref_count > 1:
             final_prompt = f"--- [Main Prompt] ---\n{final_prompt}"
             
         parts.append(types.Part.from_text(text=final_prompt))
+        
+        # --- Process Text/PDF File ---
+        if text_file_path and text_file_path.strip() != "":
+            try:
+                clean_path = text_file_path.strip().strip('"').strip("'")
+                if os.path.exists(clean_path):
+                    ext = os.path.splitext(clean_path)[1].lower()
+                    if ext == '.txt':
+                        with open(clean_path, 'r', encoding='utf-8') as f:
+                            text_content = f.read()
+                        parts.append(types.Part.from_text(text=f"--- [Reference Text from {os.path.basename(clean_path)}] ---\n{text_content}"))
+                    elif ext == '.pdf':
+                        print(f"NanoBanana2: Uploading PDF to Gemini API: {clean_path}")
+                        uploaded_file = client.files.upload(file=clean_path, mime_type="application/pdf")
+                        parts.append(uploaded_file)
+                    else:
+                        print(f"NanoBanana2 Error: Unsupported file type for text_file_path: {ext}")
+                else:
+                    print(f"NanoBanana2 Error: The file {clean_path} does not exist.")
+            except Exception as e:
+                print(f"NanoBanana2 Error processing document: {e}")
+                
         contents = [types.Content(role="user", parts=parts)]
         
         # --- Configuration ---
