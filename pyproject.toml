@@ -1,7 +1,7 @@
 [project]
 name = "nanobanana2"
 description = "A ComfyUI node using Google Gemini for prompt refinement and high-fidelity multi-reference image generation."
-version = "1.0.0"
+version = "1.1.0"
 license = {file = "LICENSE"} 
 dependencies = ["google-genai", "pillow", "numpy", "torch"]
 # classifiers = [

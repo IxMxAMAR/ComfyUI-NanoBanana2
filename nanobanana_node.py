@@ -241,7 +241,7 @@ class NanoBanana2MultiRef:
                     elif ext == '.pdf':
                         print(f"NanoBanana2: Uploading PDF to Gemini API: {clean_path}")
                         uploaded_file = client.files.upload(file=clean_path, mime_type="application/pdf")
-                        parts.append(uploaded_file)
+                        parts.append(types.Part.from_uri(file_uri=uploaded_file.uri, mime_type="application/pdf"))
                     else:
                         print(f"NanoBanana2 Error: Unsupported file type for text_file_path: {ext}")
                 else:
