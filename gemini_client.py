@@ -126,7 +126,49 @@ IMAGEN_MODELS = [
 # Imagen aspect ratios (documented Imagen API set)
 IMAGEN_ASPECT_RATIOS = ["1:1", "3:4", "4:3", "9:16", "16:9"]
 
-ALL_MODELS = TEXT_MODELS + IMAGE_MODELS + IMAGEN_MODELS
+# TTS models (use generate_content with audio response modality)
+TTS_MODELS = [
+    "gemini-2.5-flash-preview-tts",
+    "gemini-2.5-pro-preview-tts",
+    "gemini-3.1-flash-tts-preview",
+]
+
+# Embedding models
+EMBEDDING_MODELS = [
+    "gemini-embedding-001",
+    "gemini-embedding-2-preview",
+]
+
+# Veo video generation (uses predictLongRunning)
+VEO_MODELS = [
+    "veo-3.1-generate-preview",
+    "veo-3.1-fast-generate-preview",
+    "veo-3.1-lite-generate-preview",
+    "veo-3.0-generate-001",
+    "veo-3.0-fast-generate-001",
+    "veo-2.0-generate-001",
+]
+
+# Lyria music models
+LYRIA_MODELS = [
+    "lyria-3-pro-preview",
+    "lyria-3-clip-preview",
+]
+
+# Veo supports these aspect ratios
+VEO_ASPECT_RATIOS = ["16:9", "9:16"]
+
+# Pre-built voices for Gemini TTS
+TTS_VOICES = [
+    "Zephyr", "Puck", "Charon", "Kore", "Fenrir",
+    "Leda", "Orus", "Aoede", "Callirrhoe", "Autonoe",
+    "Enceladus", "Iapetus", "Umbriel", "Algieba", "Despina",
+    "Erinome", "Algenib", "Rasalgethi", "Laomedeia", "Achernar",
+    "Alnilam", "Schedar", "Gacrux", "Pulcherrima", "Achird",
+    "Zubenelgenubi", "Vindemiatrix", "Sadachbia", "Sadaltager", "Sulafat",
+]
+
+ALL_MODELS = TEXT_MODELS + IMAGE_MODELS + IMAGEN_MODELS + TTS_MODELS + EMBEDDING_MODELS + VEO_MODELS + LYRIA_MODELS
 
 ASPECT_RATIOS = [
     "AUTO", "1:1", "2:3", "3:2", "3:4", "4:3",
