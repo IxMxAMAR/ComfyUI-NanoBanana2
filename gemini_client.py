@@ -62,22 +62,71 @@ def retry_with_backoff(fn, retries=3, base_delay=5.0):
 # Model lists
 # ---------------------------------------------------------------------------
 
+# All model IDs below are verified against Google's Developer API (models.list).
+# Use the "Gemini List Available Models" node to see what's accessible for YOUR key.
+
 TEXT_MODELS = [
-    "gemini-3.1-pro-preview",
+    # --- Latest aliases (auto-updated by Google) ---
+    "gemini-pro-latest",
+    "gemini-flash-latest",
+    "gemini-flash-lite-latest",
+    # --- Gemini 3 Previews (most capable) ---
     "gemini-3-pro-preview",
+    "gemini-3-flash-preview",
+    "gemini-3.1-pro-preview",
+    "gemini-3.1-pro-preview-customtools",
     "gemini-3.1-flash-lite-preview",
+    # --- Gemini 2.5 (stable) ---
     "gemini-2.5-pro",
     "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    # --- Gemini 2.0 ---
     "gemini-2.0-flash",
+    "gemini-2.0-flash-001",
+    "gemini-2.0-flash-lite",
+    "gemini-2.0-flash-lite-001",
+    # --- TTS variants ---
+    "gemini-2.5-flash-preview-tts",
+    "gemini-2.5-pro-preview-tts",
+    "gemini-3.1-flash-tts-preview",
+    # --- Specialized ---
+    "gemini-robotics-er-1.5-preview",
+    "gemini-robotics-er-1.6-preview",
+    "gemini-2.5-computer-use-preview-10-2025",
+    "deep-research-pro-preview-12-2025",
+    "nano-banana-pro-preview",
+    # --- Lyria (music) ---
+    "lyria-3-clip-preview",
+    "lyria-3-pro-preview",
+    # --- Gemma (open models) ---
+    "gemma-3-1b-it",
+    "gemma-3-4b-it",
+    "gemma-3-12b-it",
+    "gemma-3-27b-it",
+    "gemma-3n-e2b-it",
+    "gemma-3n-e4b-it",
+    "gemma-4-26b-a4b-it",
+    "gemma-4-31b-it",
 ]
 
+# Image generation via generate_content (native multimodal output)
 IMAGE_MODELS = [
-    "gemini-3.1-flash-image-preview",
-    "gemini-3-pro-image-preview",
-    "gemini-2.5-flash-image",
+    "gemini-3.1-flash-image-preview",  # Nano Banana 2
+    "gemini-3-pro-image-preview",      # Nano Banana Pro
+    "gemini-2.5-flash-image",          # Nano Banana
 ]
 
-ALL_MODELS = TEXT_MODELS + IMAGE_MODELS
+# Imagen uses generate_images (predict) endpoint — different API path
+IMAGEN_MODELS = [
+    "imagen-4.0-ultra-generate-001",
+    "imagen-4.0-generate-001",
+    "imagen-4.0-fast-generate-001",
+]
+
+# Imagen aspect ratios (documented Imagen API set)
+IMAGEN_ASPECT_RATIOS = ["1:1", "3:4", "4:3", "9:16", "16:9"]
+
+ALL_MODELS = TEXT_MODELS + IMAGE_MODELS + IMAGEN_MODELS
 
 ASPECT_RATIOS = [
     "AUTO", "1:1", "2:3", "3:2", "3:4", "4:3",
