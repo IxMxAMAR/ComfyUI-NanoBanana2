@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 try:
     from .shared.node_utils import AlwaysExecuteMixin
     from .shared.auth import BaseAPIKeyNode
-    from .shared.conversions import tensor_to_jpeg_bytes, bytes_to_tensor
+    from .shared.conversions import tensor_to_jpeg_bytes, mask_to_jpeg_bytes, bytes_to_tensor
 except ImportError:
     # Fallback for direct testing / flat layouts
     from shared.node_utils import AlwaysExecuteMixin
     from shared.auth import BaseAPIKeyNode
-    from shared.conversions import tensor_to_jpeg_bytes, bytes_to_tensor
+    from shared.conversions import tensor_to_jpeg_bytes, mask_to_jpeg_bytes, bytes_to_tensor
 
 from .gemini_client import (
     get_client,
@@ -1028,11 +1028,11 @@ class NanoBanana_ImageEdit(AlwaysExecuteMixin):
                 }),
             },
             "optional": {
-                "mask": ("IMAGE", {
-                    "tooltip": "Optional mask indicating which areas to edit (white = edit, black = keep).",
+                "mask": ("MASK", {
+                    "tooltip": "Optional mask — which areas to edit. White = edit, black = keep. Works with any MASK source: SAM, Grounding DINO, segmentation, alpha channels, RMBG. Gemini doesn't do pixel-perfect masking — it uses this as visual guidance alongside your instructions.",
                 }),
                 "reference_image": ("IMAGE", {
-                    "tooltip": "Optional reference image for the edit (e.g., a face to swap into the masked region).",
+                    "tooltip": "Optional reference image (e.g., a face to swap into the masked region).",
                 }),
                 "reference_image_2": ("IMAGE", {
                     "tooltip": "Optional second reference image.",
@@ -1089,9 +1089,9 @@ class NanoBanana_ImageEdit(AlwaysExecuteMixin):
         parts.append(types.Part.from_text(text="--- [Source Image — the image to edit] ---"))
         parts.append(types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"))
 
-        # Optional mask
+        # Optional mask (accepts ComfyUI MASK type, converts to B/W image for Gemini)
         if mask is not None:
-            mask_bytes = tensor_to_jpeg_bytes(mask, quality=95)
+            mask_bytes = mask_to_jpeg_bytes(mask, quality=95)
             parts.append(types.Part.from_text(text="--- [Edit Mask — white pixels = edit this area, black = keep unchanged] ---"))
             parts.append(types.Part.from_bytes(data=mask_bytes, mime_type="image/jpeg"))
 
@@ -1145,8 +1145,8 @@ class NanoBanana_Inpaint(AlwaysExecuteMixin):
                 "image": ("IMAGE", {
                     "tooltip": "The source image to inpaint.",
                 }),
-                "mask": ("IMAGE", {
-                    "tooltip": "Mask image (white = area to fill).",
+                "mask": ("MASK", {
+                    "tooltip": "Mask (white = fill this area, black = keep). Accepts any ComfyUI MASK — from SAM, Grounding DINO, alpha channels, etc.",
                 }),
                 "prompt": ("STRING", {
                     "multiline": True,
@@ -1155,6 +1155,9 @@ class NanoBanana_Inpaint(AlwaysExecuteMixin):
                 }),
             },
             "optional": {
+                "reference_image": ("IMAGE", {
+                    "tooltip": "Optional reference image (e.g., object/face to place in the masked area).",
+                }),
                 "system_instruction": ("STRING", {
                     "multiline": True,
                     "default": "",
@@ -1176,6 +1179,7 @@ class NanoBanana_Inpaint(AlwaysExecuteMixin):
         image,
         mask,
         prompt,
+        reference_image=None,
         system_instruction="",
     ):
         from google.genai import types
@@ -1191,10 +1195,16 @@ class NanoBanana_Inpaint(AlwaysExecuteMixin):
         parts.append(types.Part.from_text(text="--- [Source Image] ---"))
         parts.append(types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"))
 
-        # Mask
-        mask_bytes = tensor_to_jpeg_bytes(mask, quality=95)
+        # Mask (ComfyUI MASK -> B/W image)
+        mask_bytes = mask_to_jpeg_bytes(mask, quality=95)
         parts.append(types.Part.from_text(text="--- [Inpaint Mask (white = fill area)] ---"))
         parts.append(types.Part.from_bytes(data=mask_bytes, mime_type="image/jpeg"))
+
+        # Optional reference image
+        if reference_image is not None:
+            ref_bytes = tensor_to_jpeg_bytes(reference_image, quality=95)
+            parts.append(types.Part.from_text(text="--- [Reference Image — use as source for the inpainted region] ---"))
+            parts.append(types.Part.from_bytes(data=ref_bytes, mime_type="image/jpeg"))
 
         # Prompt
         parts.append(
