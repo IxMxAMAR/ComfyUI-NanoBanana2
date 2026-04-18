@@ -1029,7 +1029,16 @@ class NanoBanana_ImageEdit(AlwaysExecuteMixin):
             },
             "optional": {
                 "mask": ("IMAGE", {
-                    "tooltip": "Optional mask indicating which areas to edit (white = edit).",
+                    "tooltip": "Optional mask indicating which areas to edit (white = edit, black = keep).",
+                }),
+                "reference_image": ("IMAGE", {
+                    "tooltip": "Optional reference image for the edit (e.g., a face to swap into the masked region).",
+                }),
+                "reference_image_2": ("IMAGE", {
+                    "tooltip": "Optional second reference image.",
+                }),
+                "reference_image_3": ("IMAGE", {
+                    "tooltip": "Optional third reference image.",
                 }),
                 "system_instruction": ("STRING", {
                     "multiline": True,
@@ -1060,6 +1069,9 @@ class NanoBanana_ImageEdit(AlwaysExecuteMixin):
         image,
         edit_instruction,
         mask=None,
+        reference_image=None,
+        reference_image_2=None,
+        reference_image_3=None,
         system_instruction="",
         aspect_ratio="AUTO",
         image_size="AUTO",
@@ -1072,16 +1084,25 @@ class NanoBanana_ImageEdit(AlwaysExecuteMixin):
 
         parts = []
 
-        # Source image
+        # Source image (the one being edited)
         img_bytes = tensor_to_jpeg_bytes(image, quality=95)
-        parts.append(types.Part.from_text(text="--- [Source Image] ---"))
+        parts.append(types.Part.from_text(text="--- [Source Image — the image to edit] ---"))
         parts.append(types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"))
 
         # Optional mask
         if mask is not None:
             mask_bytes = tensor_to_jpeg_bytes(mask, quality=95)
-            parts.append(types.Part.from_text(text="--- [Edit Mask (white = edit area)] ---"))
+            parts.append(types.Part.from_text(text="--- [Edit Mask — white pixels = edit this area, black = keep unchanged] ---"))
             parts.append(types.Part.from_bytes(data=mask_bytes, mime_type="image/jpeg"))
+
+        # Optional reference images (for face swaps, style refs, etc.)
+        ref_idx = 1
+        for ref in (reference_image, reference_image_2, reference_image_3):
+            if ref is not None:
+                ref_bytes = tensor_to_jpeg_bytes(ref, quality=95)
+                parts.append(types.Part.from_text(text=f"--- [Reference Image {ref_idx} — use as source for the edited region] ---"))
+                parts.append(types.Part.from_bytes(data=ref_bytes, mime_type="image/jpeg"))
+                ref_idx += 1
 
         # Edit instruction
         parts.append(types.Part.from_text(text=f"Edit instruction: {edit_instruction}"))
