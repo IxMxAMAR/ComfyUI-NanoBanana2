@@ -94,6 +94,8 @@ TEXT_MODELS = [
     "gemini-robotics-er-1.6-preview",
     "gemini-2.5-computer-use-preview-10-2025",
     "deep-research-pro-preview-12-2025",
+    "deep-research-preview-04-2026",
+    "deep-research-max-preview-04-2026",
     "nano-banana-pro-preview",
     # --- Lyria (music) ---
     "lyria-3-clip-preview",
@@ -135,8 +137,23 @@ TTS_MODELS = [
 
 # Embedding models
 EMBEDDING_MODELS = [
-    "gemini-embedding-001",
+    "gemini-embedding-2",          # NEW: stable v2 (released April 2026)
     "gemini-embedding-2-preview",
+    "gemini-embedding-001",
+]
+
+# AQA (Attributed Question Answering) — uses generateAnswer endpoint
+AQA_MODELS = [
+    "aqa",
+]
+
+# Native audio / Live models — use bidiGenerateContent (websocket streaming)
+# Listed but no dedicated node yet (live streaming requires special handling)
+NATIVE_AUDIO_MODELS = [
+    "gemini-2.5-flash-native-audio-latest",
+    "gemini-2.5-flash-native-audio-preview-12-2025",
+    "gemini-2.5-flash-native-audio-preview-09-2025",
+    "gemini-3.1-flash-live-preview",
 ]
 
 # Veo video generation (uses predictLongRunning)
