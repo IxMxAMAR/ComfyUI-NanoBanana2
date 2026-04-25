@@ -1,7 +1,7 @@
 [project]
 name = "nanobanana2"
 description = "Full-featured Google Gemini integration for ComfyUI - Image Gen, Vision, Text, Editing"
-version = "2.4.1"
+version = "2.4.2"
 license = {text = "MIT License"}
 requires-python = ">=3.10"
 dependencies = [

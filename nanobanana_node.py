@@ -212,20 +212,28 @@ class NanoBanana_APIKey(BaseAPIKeyNode):
 
 
 class NanoBanana_ModelSelector:
-    """Dropdown selector for Gemini models with optional custom override."""
+    """Dropdown selector for Gemini models with optional custom override.
+
+    Note: ComfyUI dropdowns are static at load time, so this node shows
+    ALL_MODELS in the picker. Use category_validate to enforce that the
+    selected model matches your declared category at runtime — useful for
+    catching mistakes like picking 'imagen-...' when you wanted text gen.
+    """
 
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "model_type": (["all", "text", "image"], {
-                    "default": "all",
-                    "tooltip": "Filter model list by capability.",
-                }),
                 "model": (ALL_MODELS, {
                     "default": ALL_MODELS[0],
-                    "tooltip": "Select a Gemini model.",
+                    "tooltip": "Select any Gemini/Imagen/Veo/Lyria/Embedding model.",
                 }),
+                "category_validate": (["any", "text", "image_gen", "imagen", "tts", "veo", "lyria", "embedding"], {
+                    "default": "any",
+                    "tooltip": "Validate that the selected model matches this category. Raises an error at runtime if not. Helps catch mistakes like 'imagen-...' selected for a text node.",
+                }),
+            },
+            "optional": {
                 "custom_model": ("STRING", {
                     "default": "",
                     "tooltip": "Override with a custom model ID (leave blank to use dropdown).",
@@ -238,8 +246,28 @@ class NanoBanana_ModelSelector:
     FUNCTION = "select"
     CATEGORY = "NanoBanana2/Config"
 
-    def select(self, model_type, model, custom_model):
-        return (_resolve_model(model, custom_model),)
+    def select(self, model, category_validate="any", custom_model=""):
+        final = _resolve_model(model, custom_model)
+
+        if category_validate != "any" and not custom_model.strip():
+            # Only validate dropdown picks, not custom overrides
+            category_lists = {
+                "text": TEXT_MODELS,
+                "image_gen": IMAGE_MODELS,
+                "imagen": IMAGEN_MODELS,
+                "tts": TTS_MODELS,
+                "veo": VEO_MODELS,
+                "lyria": LYRIA_MODELS,
+                "embedding": EMBEDDING_MODELS,
+            }
+            allowed = category_lists.get(category_validate, [])
+            if final not in allowed:
+                raise ValueError(
+                    f"Model '{final}' is not in the {category_validate} category. "
+                    f"Allowed for {category_validate}: {allowed}"
+                )
+
+        return (final,)
 
 
 class NanoBanana_SafetySettings:
@@ -874,8 +902,8 @@ class NanoBanana_ImageGen(AlwaysExecuteMixin):
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var.",
                 }),
                 "model": (IMAGE_MODELS, {
-                    "default": "imagen-4.0-generate-001",
-                    "tooltip": "Gemini/Imagen model for image generation.",
+                    "default": "gemini-3.1-flash-image-preview",
+                    "tooltip": "NanoBanana - image model. For Imagen models, use the dedicated Imagen Image Generation node instead.",
                 }),
                 "custom_model": ("STRING", {
                     "default": "",
@@ -1875,8 +1903,9 @@ class NanoBanana_MusicGen(AlwaysExecuteMixin):
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
 
-        # Lyria uses the :predict endpoint directly
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{final_model}:predict?key={key}"
+        # Lyria uses the :predict endpoint directly. Pass key via params/header
+        # to keep it out of the base URL string (which can leak in error logs).
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{final_model}:predict"
         instances = [{"prompt": prompt}]
         if negative_prompt.strip():
             instances[0]["negativePrompt"] = negative_prompt.strip()
@@ -1888,7 +1917,12 @@ class NanoBanana_MusicGen(AlwaysExecuteMixin):
         body = {"instances": instances, "parameters": parameters}
 
         def _call():
-            resp = requests.post(url, json=body, timeout=600)
+            resp = requests.post(
+                url,
+                json=body,
+                headers={"x-goog-api-key": key},
+                timeout=600,
+            )
             if resp.status_code >= 400:
                 raise RuntimeError(f"Lyria API error {resp.status_code}: {resp.text[:400]}")
             return resp.json()
@@ -1930,7 +1964,7 @@ class NanoBanana_MusicGen(AlwaysExecuteMixin):
 # Token Counter (utility)
 # ===================================================================
 
-class NanoBanana_CountTokens:
+class NanoBanana_CountTokens(AlwaysExecuteMixin):
     """Count tokens in a prompt for a given model. Useful for cost estimation
     and context window checks. Doesn't charge against your quota."""
 
