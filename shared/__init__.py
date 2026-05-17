@@ -15,10 +15,12 @@ from .errors import (
 from .retry import (
     api_request_with_retry,
     download_file,
+    stream_to_file,
 )
 
 from .node_utils import (
     AlwaysExecuteMixin,
+    OptionalRerunMixin,
 )
 
 from .auth import (
@@ -31,7 +33,10 @@ from .conversions import (
     pil_to_tensor,
     tensor_to_base64,
     tensor_to_jpeg_bytes,
+    tensor_to_png_bytes,
     mask_to_jpeg_bytes,
+    mask_to_png_bytes,
+    resize_mask_to_image,
     bytes_to_tensor,
     audio_to_comfy,
     comfy_to_audio_bytes,
@@ -47,8 +52,10 @@ __all__ = [
     # retry
     "api_request_with_retry",
     "download_file",
+    "stream_to_file",
     # node_utils
     "AlwaysExecuteMixin",
+    "OptionalRerunMixin",
     # auth
     "BaseAPIKeyNode",
     "DualKeyAPIKeyNode",
@@ -57,7 +64,10 @@ __all__ = [
     "pil_to_tensor",
     "tensor_to_base64",
     "tensor_to_jpeg_bytes",
+    "tensor_to_png_bytes",
     "mask_to_jpeg_bytes",
+    "mask_to_png_bytes",
+    "resize_mask_to_image",
     "bytes_to_tensor",
     "audio_to_comfy",
     "comfy_to_audio_bytes",

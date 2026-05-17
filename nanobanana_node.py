@@ -1,6 +1,6 @@
 """ComfyUI nodes for Google Gemini API.
 
-Provides 13 nodes across Image, Text, and Config subcategories.
+v2.1 — 19 original nodes + 8 new feature nodes (see extra_nodes.py).
 """
 
 import json
@@ -13,34 +13,38 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 try:
-    from .shared.node_utils import AlwaysExecuteMixin
+    from .shared.node_utils import AlwaysExecuteMixin, OptionalRerunMixin
     from .shared.auth import BaseAPIKeyNode
-    from .shared.conversions import tensor_to_jpeg_bytes, mask_to_jpeg_bytes, bytes_to_tensor
+    from .shared.conversions import (
+        tensor_to_jpeg_bytes, tensor_to_png_bytes,
+        mask_to_jpeg_bytes, mask_to_png_bytes, resize_mask_to_image,
+        bytes_to_tensor,
+    )
+    from .gemini_client import (
+        get_client, get_api_key, retry_with_backoff,
+        redact_secret, sanitize_model_id,
+        TEXT_MODELS, IMAGE_MODELS, IMAGEN_MODELS, IMAGEN_ASPECT_RATIOS,
+        IMAGEN_SAFETY_LEVELS, TTS_MODELS, TTS_VOICES, EMBEDDING_MODELS,
+        VEO_MODELS, VEO_ASPECT_RATIOS, LYRIA_MODELS, ALL_MODELS,
+        ASPECT_RATIOS, THINKING_LEVELS, IMAGE_SIZES,
+    )
 except ImportError:
     # Fallback for direct testing / flat layouts
-    from shared.node_utils import AlwaysExecuteMixin
+    from shared.node_utils import AlwaysExecuteMixin, OptionalRerunMixin
     from shared.auth import BaseAPIKeyNode
-    from shared.conversions import tensor_to_jpeg_bytes, mask_to_jpeg_bytes, bytes_to_tensor
-
-from .gemini_client import (
-    get_client,
-    get_api_key,
-    retry_with_backoff,
-    TEXT_MODELS,
-    IMAGE_MODELS,
-    IMAGEN_MODELS,
-    IMAGEN_ASPECT_RATIOS,
-    TTS_MODELS,
-    TTS_VOICES,
-    EMBEDDING_MODELS,
-    VEO_MODELS,
-    VEO_ASPECT_RATIOS,
-    LYRIA_MODELS,
-    ALL_MODELS,
-    ASPECT_RATIOS,
-    THINKING_LEVELS,
-    IMAGE_SIZES,
-)
+    from shared.conversions import (
+        tensor_to_jpeg_bytes, tensor_to_png_bytes,
+        mask_to_jpeg_bytes, mask_to_png_bytes, resize_mask_to_image,
+        bytes_to_tensor,
+    )
+    from gemini_client import (
+        get_client, get_api_key, retry_with_backoff,
+        redact_secret, sanitize_model_id,
+        TEXT_MODELS, IMAGE_MODELS, IMAGEN_MODELS, IMAGEN_ASPECT_RATIOS,
+        IMAGEN_SAFETY_LEVELS, TTS_MODELS, TTS_VOICES, EMBEDDING_MODELS,
+        VEO_MODELS, VEO_ASPECT_RATIOS, LYRIA_MODELS, ALL_MODELS,
+        ASPECT_RATIOS, THINKING_LEVELS, IMAGE_SIZES,
+    )
 
 
 # ===================================================================
@@ -53,15 +57,19 @@ def _resolve_model(model, custom_model):
     return cm if cm else model
 
 
-def _build_image_parts(ref_images, labels=True):
+def _build_image_parts(ref_images, labels=True, lossless=False):
     """Convert a list of optional image tensors into genai Part objects.
 
     Args:
         ref_images: list of (tensor_or_None) image inputs.
         labels: whether to prepend text labels.
+        lossless: use PNG (no quality loss) instead of JPEG. Recommended
+            for vision/OCR tasks where small text matters.
 
     Returns:
-        (parts_list, ref_count) - list of genai Part objects and count of images added.
+        (parts_list, ref_count) - list of genai Part objects and count
+        of images added (ref_count starts at 1 and is the next available
+        index, so a return of 1 means zero images were added).
     """
     from google.genai import types
 
@@ -70,22 +78,27 @@ def _build_image_parts(ref_images, labels=True):
     for tensor_batch in ref_images:
         if tensor_batch is None:
             continue
-        try:
-            for i in range(tensor_batch.shape[0]):
-                single = tensor_batch[i : i + 1]
-                img_bytes = tensor_to_jpeg_bytes(single, quality=95)
-                if labels:
-                    parts.append(
-                        types.Part.from_text(text=f"--- [Reference Image {ref_count}] ---")
-                    )
-                parts.append(
-                    types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg")
+        for i in range(tensor_batch.shape[0]):
+            single = tensor_batch[i : i + 1]
+            try:
+                if lossless:
+                    img_bytes = tensor_to_png_bytes(single)
+                    mime = "image/png"
+                else:
+                    img_bytes = tensor_to_jpeg_bytes(single, quality=95)
+                    mime = "image/jpeg"
+            except Exception as e:
+                raise ValueError(
+                    f"Failed to convert reference image {ref_count}: {e}"
                 )
-                ref_count += 1
-        except Exception as e:
-            raise ValueError(
-                f"Failed to convert reference image {ref_count} to JPEG: {e}"
+            if labels:
+                parts.append(
+                    types.Part.from_text(text=f"--- [Reference Image {ref_count}] ---")
+                )
+            parts.append(
+                types.Part.from_bytes(data=img_bytes, mime_type=mime)
             )
+            ref_count += 1
     return parts, ref_count
 
 
@@ -152,16 +165,24 @@ def _build_config(
     if modalities:
         kwargs["response_modalities"] = modalities
 
-    # Safety settings
+    # Safety settings — raise on invalid JSON so the user notices their filters
+    # were never applied (previously this silently warned and continued, which
+    # could produce harmful output that the user thought was being filtered).
     if safety_settings_json and safety_settings_json.strip():
         try:
             ss = json.loads(safety_settings_json)
-            if isinstance(ss, list):
-                kwargs["safety_settings"] = [
-                    types.SafetySetting(**s) for s in ss
-                ]
-        except (json.JSONDecodeError, TypeError):
-            logger.warning("Invalid safety_settings JSON, ignoring.")
+        except (json.JSONDecodeError, TypeError) as e:
+            raise ValueError(
+                f"Invalid safety_settings_json — could not parse: {e}. "
+                "Use the 'NanoBanana - Safety Settings' node to generate "
+                "a well-formed JSON string."
+            )
+        if not isinstance(ss, list):
+            raise ValueError(
+                "safety_settings_json must be a JSON list of "
+                "{category, threshold} objects."
+            )
+        kwargs["safety_settings"] = [types.SafetySetting(**s) for s in ss]
 
     # Structured output
     if response_mime_type:
@@ -172,19 +193,28 @@ def _build_config(
     return types.GenerateContentConfig(**kwargs)
 
 
-def _extract_image_from_stream(client, model, contents, config):
-    """Stream generate and extract first image from response.
+def _extract_image_from_stream(client, model, contents, config, return_all=False):
+    """Stream generate and extract image(s) from response.
 
     Iterates ALL parts in ALL chunks (bug fix over original which only
     checked chunk.parts[0]).
 
+    Args:
+        return_all: if True, collect EVERY image part (useful when
+            candidate_count > 1 — previously v2.0 charged for multiple
+            candidates but silently discarded all but the first). Returns
+            a batched tensor [N, H, W, C]. If False, returns the first
+            image only as [1, H, W, C].
+
     Returns:
-        torch.Tensor of shape [1, H, W, C]
+        torch.Tensor of shape [N, H, W, C] (or [1, H, W, C] if return_all=False).
 
     Raises:
         RuntimeError: if no image data is returned.
     """
+    import torch
     model_text = []
+    images = []
     for chunk in client.models.generate_content_stream(
         model=model, contents=contents, config=config
     ):
@@ -192,11 +222,31 @@ def _extract_image_from_stream(client, model, contents, config):
             continue
         for part in chunk.parts:
             if part.inline_data and part.inline_data.data:
-                return bytes_to_tensor(part.inline_data.data)
+                img = bytes_to_tensor(part.inline_data.data)
+                if not return_all:
+                    return img
+                images.append(img)
             elif part.text:
                 model_text.append(part.text)
-    text_msg = " ".join(model_text)[:300] if model_text else "No details"
-    raise RuntimeError(f"NanoBanana - returned no image. Model said: {text_msg}")
+
+    if not images:
+        text_msg = " ".join(model_text)[:300] if model_text else "No details"
+        raise RuntimeError(
+            f"NanoBanana - returned no image. Model said: {redact_secret(text_msg)}"
+        )
+
+    # Stack candidates — only if same dimensions. Otherwise return first.
+    if len(images) == 1:
+        return images[0]
+    try:
+        return torch.cat(images, dim=0)
+    except RuntimeError:
+        # Different sizes — return first only (rare; happens if model returns
+        # mixed-size candidates which Gemini normally doesn't).
+        logger.warning(
+            "Image candidates have mismatched dimensions; returning first only."
+        )
+        return images[0]
 
 
 # ===================================================================
@@ -516,6 +566,12 @@ class NanoBanana_PromptRefiner(AlwaysExecuteMixin):
                 }),
             },
             "optional": {
+                "target": (["image", "video", "music", "text", "code"], {
+                    "default": "image",
+                    "tooltip": "What downstream generator the prompt is for. "
+                               "v2.0 hardcoded 'image generator', breaking the "
+                               "node for video/music/text refinement.",
+                }),
                 "system_instruction": ("STRING", {
                     "multiline": True,
                     "default": "",
@@ -546,6 +602,7 @@ class NanoBanana_PromptRefiner(AlwaysExecuteMixin):
         model,
         custom_model,
         base_prompt,
+        target="image",
         system_instruction="",
         thinking_level="NONE",
         temperature=0.7,
@@ -554,11 +611,18 @@ class NanoBanana_PromptRefiner(AlwaysExecuteMixin):
         final_model = _resolve_model(model, custom_model)
         client = get_client(key)
 
-        # Build system context
+        target_phrase = {
+            "image": "an AI Image Generator (think Imagen, Midjourney, SDXL, FLUX)",
+            "video": "an AI Video Generator (think Veo, Sora, Runway)",
+            "music": "an AI Music Generator (think Lyria, Suno, Udio)",
+            "text": "another LLM that will produce a final answer",
+            "code": "a code-generating LLM (favor explicit type / API / framework names)",
+        }.get(target, "an AI Image Generator")
+
         sys_text = (
             "You are a world-class Prompt Engineer. "
-            "Your task is to take a user's base concept and expand it into a highly detailed, "
-            "professional prompt for an AI Image Generator.\n\n"
+            f"Your task is to take a user's base concept and expand it into a "
+            f"highly detailed, professional prompt for {target_phrase}.\n\n"
         )
         if system_instruction and system_instruction.strip():
             sys_text += f"Refinement Style & Instructions: {system_instruction.strip()}\n\n"
@@ -781,6 +845,16 @@ class NanoBanana_StructuredOutput(AlwaysExecuteMixin):
             response = client.models.generate_content(
                 model=final_model, contents=prompt, config=config
             )
+            # Prefer the SDK's `.parsed` attribute when available — it
+            # strips markdown fences and pre-parses the JSON. v2.0 always
+            # used `.text` which broke when the model wrapped output in
+            # ```json ... ``` fences.
+            parsed = getattr(response, "parsed", None)
+            if parsed is not None:
+                try:
+                    return (json.dumps(parsed),)
+                except (TypeError, ValueError):
+                    pass  # Fall through to text
             return (response.text.strip() if response.text else "{}",)
 
         return retry_with_backoff(_call)
@@ -829,6 +903,13 @@ class NanoBanana_Vision(AlwaysExecuteMixin):
                     "step": 0.05,
                     "tooltip": "Controls randomness. Lower = more focused analysis.",
                 }),
+                "lossless": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": "Encode images as lossless PNG instead of JPEG. "
+                               "Use for OCR, small-text recognition, or "
+                               "fine-grained classification where JPEG "
+                               "artifacts degrade accuracy. Higher bandwidth.",
+                }),
                 "ref_image_1": ("IMAGE", {"tooltip": "First image to analyze."}),
                 "ref_image_2": ("IMAGE", {"tooltip": "Second image to analyze."}),
                 "ref_image_3": ("IMAGE", {"tooltip": "Third image to analyze."}),
@@ -849,6 +930,7 @@ class NanoBanana_Vision(AlwaysExecuteMixin):
         prompt,
         system_instruction="",
         temperature=0.1,
+        lossless=False,
         ref_image_1=None,
         ref_image_2=None,
         ref_image_3=None,
@@ -860,10 +942,11 @@ class NanoBanana_Vision(AlwaysExecuteMixin):
         final_model = _resolve_model(model, custom_model)
         client = get_client(key)
 
-        # Build image parts
+        # Build image parts — PNG for vision tasks where small details matter
         img_parts, img_count = _build_image_parts(
             [ref_image_1, ref_image_2, ref_image_3, ref_image_4],
             labels=True,
+            lossless=lossless,
         )
 
         # Build contents
@@ -883,7 +966,7 @@ class NanoBanana_Vision(AlwaysExecuteMixin):
             result = response.text.strip() if response.text else ""
             # Truncate stdout logging to avoid flooding console
             preview = result[:200] + "..." if len(result) > 200 else result
-            print(f"[API Toolkit Gemini Vision] {preview}")
+            print(f"[NanoBanana Vision] {preview}")
             return (result,)
 
         return retry_with_backoff(_call)
@@ -950,7 +1033,9 @@ class NanoBanana_ImageGen(AlwaysExecuteMixin):
                     "default": 1,
                     "min": 1,
                     "max": 4,
-                    "tooltip": "Number of image candidates to generate (returns first).",
+                    "tooltip": "Number of image candidates to generate. All "
+                               "are returned as a batch — wire into Preview "
+                               "Image or save the lot.",
                 }),
                 "ref_image_1": ("IMAGE", {"tooltip": "First reference image."}),
                 "ref_image_2": ("IMAGE", {"tooltip": "Second reference image."}),
@@ -1020,7 +1105,12 @@ class NanoBanana_ImageGen(AlwaysExecuteMixin):
         )
 
         def _call():
-            return _extract_image_from_stream(client, final_model, contents, config)
+            # Return ALL candidates (v2.0 silently dropped 2-4 even though
+            # they were paid for); user gets a batched IMAGE tensor.
+            return _extract_image_from_stream(
+                client, final_model, contents, config,
+                return_all=(candidate_count > 1),
+            )
 
         result = retry_with_backoff(_call)
         return (result,)
@@ -1112,24 +1202,27 @@ class NanoBanana_ImageEdit(AlwaysExecuteMixin):
 
         parts = []
 
-        # Source image (the one being edited)
-        img_bytes = tensor_to_jpeg_bytes(image, quality=95)
+        # Source image (the one being edited) — PNG for lossless reference
+        img_bytes = tensor_to_png_bytes(image)
         parts.append(types.Part.from_text(text="--- [Source Image — the image to edit] ---"))
-        parts.append(types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"))
+        parts.append(types.Part.from_bytes(data=img_bytes, mime_type="image/png"))
 
-        # Optional mask (accepts ComfyUI MASK type, converts to B/W image for Gemini)
+        # Optional mask — auto-resize to match image dims (Gemini 400s on mismatch),
+        # PNG for crisp boundaries
         if mask is not None:
-            mask_bytes = mask_to_jpeg_bytes(mask, quality=95)
+            mask_aligned = resize_mask_to_image(mask, image)
+            mask_bytes = mask_to_png_bytes(mask_aligned)
             parts.append(types.Part.from_text(text="--- [Edit Mask — white pixels = edit this area, black = keep unchanged] ---"))
-            parts.append(types.Part.from_bytes(data=mask_bytes, mime_type="image/jpeg"))
+            parts.append(types.Part.from_bytes(data=mask_bytes, mime_type="image/png"))
 
-        # Optional reference images (for face swaps, style refs, etc.)
+        # Optional reference images (for face swaps, style refs, etc.) — PNG
+        # preserves identity better than JPEG
         ref_idx = 1
         for ref in (reference_image, reference_image_2, reference_image_3):
             if ref is not None:
-                ref_bytes = tensor_to_jpeg_bytes(ref, quality=95)
+                ref_bytes = tensor_to_png_bytes(ref)
                 parts.append(types.Part.from_text(text=f"--- [Reference Image {ref_idx} — use as source for the edited region] ---"))
-                parts.append(types.Part.from_bytes(data=ref_bytes, mime_type="image/jpeg"))
+                parts.append(types.Part.from_bytes(data=ref_bytes, mime_type="image/png"))
                 ref_idx += 1
 
         # Edit instruction
@@ -1218,21 +1311,24 @@ class NanoBanana_Inpaint(AlwaysExecuteMixin):
 
         parts = []
 
-        # Source image
-        img_bytes = tensor_to_jpeg_bytes(image, quality=95)
+        # Source image — PNG so mask boundary alignment is pixel-exact
+        img_bytes = tensor_to_png_bytes(image)
         parts.append(types.Part.from_text(text="--- [Source Image] ---"))
-        parts.append(types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"))
+        parts.append(types.Part.from_bytes(data=img_bytes, mime_type="image/png"))
 
-        # Mask (ComfyUI MASK -> B/W image)
-        mask_bytes = mask_to_jpeg_bytes(mask, quality=95)
+        # Mask must match image dims (Gemini returns 400 otherwise) — resize
+        # if upstream MASK source (SAM/depth/etc) produced a different size.
+        # Use PNG to keep mask edges crisp; JPEG smears them ~2px.
+        mask_aligned = resize_mask_to_image(mask, image)
+        mask_bytes = mask_to_png_bytes(mask_aligned)
         parts.append(types.Part.from_text(text="--- [Inpaint Mask (white = fill area)] ---"))
-        parts.append(types.Part.from_bytes(data=mask_bytes, mime_type="image/jpeg"))
+        parts.append(types.Part.from_bytes(data=mask_bytes, mime_type="image/png"))
 
-        # Optional reference image
+        # Optional reference image — PNG, lossless ref preserves identity
         if reference_image is not None:
-            ref_bytes = tensor_to_jpeg_bytes(reference_image, quality=95)
+            ref_bytes = tensor_to_png_bytes(reference_image)
             parts.append(types.Part.from_text(text="--- [Reference Image — use as source for the inpainted region] ---"))
-            parts.append(types.Part.from_bytes(data=ref_bytes, mime_type="image/jpeg"))
+            parts.append(types.Part.from_bytes(data=ref_bytes, mime_type="image/png"))
 
         # Prompt
         parts.append(
@@ -1496,13 +1592,18 @@ class NanoBanana_ImagenGen(AlwaysExecuteMixin):
                     "tooltip": "Things to avoid in the image.",
                 }),
                 "seed": ("INT", {
-                    "default": 0, "min": 0, "max": 2147483647,
-                    "tooltip": "Seed for reproducibility. 0 = random.",
+                    "default": -1, "min": -1, "max": 2147483647,
+                    "tooltip": "Seed for reproducibility. -1 = random. "
+                               "(0 is a valid seed for some models — v2.0 silently "
+                               "dropped seed=0; v2.1 honors it. Use -1 for random.)",
                 }),
                 "safety_filter_level": (
-                    ["block_low_and_above"],
+                    IMAGEN_SAFETY_LEVELS,
                     {"default": "block_low_and_above",
-                     "tooltip": "Safety filter threshold. The Developer API only accepts block_low_and_above. (Vertex AI supports more levels.)"}
+                     "tooltip": "Safety filter threshold. Developer API often only "
+                                "accepts block_low_and_above on free tier; Vertex AI "
+                                "supports all four. API surfaces a clear error if "
+                                "the level isn't accepted for your model/account."}
                 ),
                 "person_generation": (
                     ["dont_allow", "allow_adult", "allow_all"],
@@ -1526,8 +1627,8 @@ class NanoBanana_ImagenGen(AlwaysExecuteMixin):
         number_of_images=1,
         aspect_ratio="1:1",
         negative_prompt="",
-        seed=0,
-        safety_filter_level="block_medium_and_above",
+        seed=-1,
+        safety_filter_level="block_low_and_above",
         person_generation="allow_adult",
     ):
         from google.genai import types
@@ -1546,7 +1647,9 @@ class NanoBanana_ImagenGen(AlwaysExecuteMixin):
         }
         if negative_prompt and negative_prompt.strip():
             cfg_kwargs["negative_prompt"] = negative_prompt.strip()
-        if seed > 0:
+        # v2.0 used `if seed > 0` which silently dropped seed=0. Now -1 means
+        # "random, don't send" and 0..N is forwarded faithfully.
+        if seed >= 0:
             cfg_kwargs["seed"] = seed
 
         config = types.GenerateImagesConfig(**cfg_kwargs)
@@ -1584,9 +1687,19 @@ class NanoBanana_ImagenGen(AlwaysExecuteMixin):
         if not tensors:
             raise RuntimeError("Imagen returned results but no image data could be extracted.")
 
-        # Concatenate into a batch
-        batch = torch.cat(tensors, dim=0)
-        return (batch,)
+        # Concatenate into a batch. Single-image case skips cat (cheaper).
+        # If candidates somehow returned mixed sizes (rare), fall back to
+        # the first to avoid a confusing torch.cat ValueError.
+        if len(tensors) == 1:
+            return (tensors[0],)
+        try:
+            return (torch.cat(tensors, dim=0),)
+        except RuntimeError:
+            logger.warning(
+                "Imagen candidates have mismatched sizes (%s); returning first only.",
+                [tuple(t.shape) for t in tensors],
+            )
+            return (tensors[0],)
 
 
 # ===================================================================
@@ -1630,6 +1743,16 @@ class NanoBanana_TTS(AlwaysExecuteMixin):
         from google.genai import types
         import torch
         import numpy as np
+
+        # Gemini TTS hard limit is ~32k chars per request; warn loudly above 16k.
+        if len(text) > 32000:
+            raise ValueError(
+                f"TTS text is {len(text)} chars; Gemini TTS limit is ~32,000. "
+                "Split into multiple calls and concatenate the resulting audio."
+            )
+        if len(text) > 16000:
+            print(f"[NanoBanana TTS] WARNING: text is {len(text)} chars; "
+                  "may approach API limits, consider splitting.")
 
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
@@ -1763,11 +1886,16 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
                 "aspect_ratio": (VEO_ASPECT_RATIOS, {"default": "16:9"}),
                 "number_of_videos": ("INT", {"default": 1, "min": 1, "max": 4}),
                 "negative_prompt": ("STRING", {"default": ""}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 2147483647}),
-                "duration_seconds": ("INT", {"default": 8, "min": 5, "max": 8,
-                    "tooltip": "Veo 3 supports 8 seconds."}),
+                "seed": ("INT", {"default": -1, "min": -1, "max": 2147483647,
+                    "tooltip": "-1 = random. 0 IS a valid seed (v2.0 silently dropped it)."}),
+                "duration_seconds": ("INT", {"default": 8, "min": 4, "max": 8,
+                    "tooltip": "Veo 2 supports 5-8s; Veo 3 supports 4, 6, or 8s "
+                               "depending on model variant."}),
                 "timeout_seconds": ("INT", {"default": 600, "min": 60, "max": 1800,
                     "tooltip": "Max time to wait for video generation."}),
+                "poll_interval": ("INT", {"default": 10, "min": 2, "max": 60,
+                    "tooltip": "Seconds between operation polls. Lower = "
+                               "more responsive cancel, higher = less API noise."}),
             },
         }
 
@@ -1778,11 +1906,18 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
 
     def generate(self, api_key, model, prompt, custom_model="", source_image=None,
                  aspect_ratio="16:9", number_of_videos=1, negative_prompt="",
-                 seed=0, duration_seconds=8, timeout_seconds=600):
+                 seed=-1, duration_seconds=8, timeout_seconds=600,
+                 poll_interval=10):
         from google.genai import types
         import time
         import os
         import uuid
+        from urllib.parse import urlparse
+
+        try:
+            from .shared.retry import stream_to_file
+        except ImportError:
+            from shared.retry import stream_to_file
 
         try:
             import folder_paths
@@ -1792,7 +1927,8 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
         os.makedirs(output_dir, exist_ok=True)
 
         key = get_api_key(api_key)
-        final_model = _resolve_model(model, custom_model)
+        # Sanitize so a malicious custom_model can't escape /models/ in URL.
+        final_model = sanitize_model_id(_resolve_model(model, custom_model))
         client = get_client(key)
 
         cfg_kwargs = {
@@ -1801,63 +1937,85 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
         }
         if negative_prompt.strip():
             cfg_kwargs["negative_prompt"] = negative_prompt.strip()
-        if seed > 0:
+        # Honor seed=0 (v2.0 silently dropped it).
+        if seed >= 0:
             cfg_kwargs["seed"] = seed
         if duration_seconds:
             cfg_kwargs["duration_seconds"] = duration_seconds
 
         config = types.GenerateVideosConfig(**cfg_kwargs)
 
-        # Start the long-running operation
         kwargs = {"model": final_model, "prompt": prompt, "config": config}
         if source_image is not None:
-            img_bytes = tensor_to_jpeg_bytes(source_image, quality=95)
-            kwargs["image"] = types.Image(image_bytes=img_bytes, mime_type="image/jpeg")
+            # PNG preserves details for img2vid identity transfer
+            img_bytes = tensor_to_png_bytes(source_image)
+            kwargs["image"] = types.Image(image_bytes=img_bytes, mime_type="image/png")
 
         print(f"[Gemini Veo] Starting video generation with {final_model}...")
         operation = client.models.generate_videos(**kwargs)
 
-        # Poll
+        # Poll. ComfyUI worker is single-threaded so this is unavoidably
+        # blocking, but at least make the interval configurable and log
+        # progress so users know it's not hung.
         start = time.time()
         while not operation.done:
             if time.time() - start > timeout_seconds:
-                raise RuntimeError(f"Veo generation timed out after {timeout_seconds}s")
+                raise RuntimeError(
+                    f"Veo generation timed out after {timeout_seconds}s "
+                    f"(operation={getattr(operation, 'name', '?')})"
+                )
             elapsed = int(time.time() - start)
             print(f"[Gemini Veo] [{elapsed}s] Polling...")
-            time.sleep(10)
+            time.sleep(max(1, int(poll_interval)))
             operation = client.operations.get(operation)
 
-        # Download
         result = getattr(operation, "response", None) or getattr(operation, "result", None)
         videos = getattr(result, "generated_videos", []) or []
         if not videos:
             raise RuntimeError("Veo operation completed but returned no videos.")
 
-        first_video = videos[0]
-        video_obj = getattr(first_video, "video", None) or first_video
+        # Save ALL videos (v2.0 dropped 2..N). First file_path / URI returned
+        # as scalars for backward compat; full set in a JSON list.
+        saved_paths = []
+        saved_uris = []
+        for i, vid in enumerate(videos):
+            video_obj = getattr(vid, "video", None) or vid
+            filename = f"gemini_veo_{uuid.uuid4().hex[:8]}_{i}.mp4"
+            file_path = os.path.join(output_dir, filename)
 
-        filename = f"gemini_veo_{uuid.uuid4().hex[:8]}.mp4"
-        file_path = os.path.join(output_dir, filename)
+            if hasattr(video_obj, "save"):
+                video_obj.save(file_path)
+            elif hasattr(video_obj, "uri") and video_obj.uri:
+                # SSRF guard — the SDK should only ever hand us googleapis or
+                # googleusercontent URIs. Refuse anything else.
+                netloc = urlparse(video_obj.uri).netloc.lower()
+                if not (netloc.endswith(".googleapis.com")
+                        or netloc.endswith(".googleusercontent.com")
+                        or netloc == "googleapis.com"
+                        or netloc == "googleusercontent.com"):
+                    raise RuntimeError(
+                        f"Refusing to download video from non-Google host: {netloc}"
+                    )
+                # stream_to_file enforces size cap + cleans up on failure.
+                stream_to_file(
+                    video_obj.uri, file_path,
+                    timeout=300, max_bytes=2 * 1024 * 1024 * 1024,  # 2 GiB cap
+                )
+            elif hasattr(video_obj, "video_bytes") and video_obj.video_bytes:
+                with open(file_path, "wb") as f:
+                    f.write(video_obj.video_bytes)
+            else:
+                raise RuntimeError(
+                    f"Could not extract video data from response: {dir(video_obj)}"
+                )
 
-        # Download video — SDK returns a Video object with .save() method or url
-        if hasattr(video_obj, "save"):
-            video_obj.save(file_path)
-        elif hasattr(video_obj, "uri") and video_obj.uri:
-            import requests
-            r = requests.get(video_obj.uri, stream=True, timeout=300)
-            r.raise_for_status()
-            with open(file_path, "wb") as f:
-                for chunk in r.iter_content(8192):
-                    f.write(chunk)
-        elif hasattr(video_obj, "video_bytes") and video_obj.video_bytes:
-            with open(file_path, "wb") as f:
-                f.write(video_obj.video_bytes)
-        else:
-            raise RuntimeError(f"Could not extract video data from response: {dir(video_obj)}")
+            saved_paths.append(file_path)
+            saved_uris.append(getattr(video_obj, "uri", "") or "")
+            print(f"[Gemini Veo] Saved video {i + 1}/{len(videos)}: {filename}")
 
-        url = getattr(video_obj, "uri", "") or ""
-        print(f"[Gemini Veo] Saved to {filename}")
-        return (file_path, url)
+        # Return first path + uri (backward compatible) — additional videos
+        # are on disk for downstream loaders / VHS combine.
+        return (saved_paths[0], saved_uris[0])
 
 
 # ===================================================================
@@ -1901,31 +2059,42 @@ class NanoBanana_MusicGen(AlwaysExecuteMixin):
         import io
 
         key = get_api_key(api_key)
-        final_model = _resolve_model(model, custom_model)
+        # Hard-validate model ID — without this a malicious custom_model like
+        # "../some-other-endpoint" could escape the /models/ path (URL-path
+        # injection / SSRF within googleapis.com).
+        final_model = sanitize_model_id(_resolve_model(model, custom_model))
 
-        # Lyria uses the :predict endpoint directly. Pass key via params/header
-        # to keep it out of the base URL string (which can leak in error logs).
+        # Lyria uses the :predict endpoint directly. Pass key via header (NOT
+        # query param) so it can't end up in proxy/CDN access logs or URL-
+        # truncation tracebacks.
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{final_model}:predict"
         instances = [{"prompt": prompt}]
         if negative_prompt.strip():
             instances[0]["negativePrompt"] = negative_prompt.strip()
 
         parameters = {"sampleCount": sample_count}
-        if seed > 0:
+        # v2.0 used `if seed > 0` which silently dropped seed=0; v2.1 honors it.
+        if seed >= 0:
             parameters["seed"] = seed
 
         body = {"instances": instances, "parameters": parameters}
 
         def _call():
-            resp = requests.post(
-                url,
-                json=body,
+            # Context-manage so the connection is returned to the pool even
+            # if .json() throws or we raise mid-handling.
+            with requests.post(
+                url, json=body,
                 headers={"x-goog-api-key": key},
                 timeout=600,
-            )
-            if resp.status_code >= 400:
-                raise RuntimeError(f"Lyria API error {resp.status_code}: {resp.text[:400]}")
-            return resp.json()
+            ) as resp:
+                if resp.status_code >= 400:
+                    # Redact in case the server echoes back the request headers
+                    # (some Google error pages do for debug purposes).
+                    raise RuntimeError(
+                        f"Lyria API error {resp.status_code}: "
+                        f"{redact_secret(resp.text[:400])}"
+                    )
+                return resp.json()
 
         data = retry_with_backoff(_call)
 

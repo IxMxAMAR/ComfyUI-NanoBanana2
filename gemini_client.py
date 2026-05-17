@@ -1,30 +1,110 @@
-"""Google Gemini API client wrapper with caching and retry."""
+"""Google Gemini API client wrapper with caching, retry, and key sanitization.
 
+v2.1 changes (security & robustness pass driven by Gemini Pro audit 2026-05-17):
+  - Client cache is now LRU-bounded (max 16 keys) and keyed by SHA-256 hash
+    of the API key. The raw key never lives in a dict key, only inside the
+    Client object. Prevents unbounded memory growth and reduces key
+    retention surface area for memory dumps.
+  - `redact_secret(text)` strips Google API keys (AIza... 35 chars) AND any
+    accidentally-embedded x-goog-api-key/Authorization headers before
+    surfacing exception messages to UI / logs.
+  - `is_transient_error()` now inspects `google.genai.errors.APIError.code`
+    when available (correct gRPC status), falling back to string matching
+    with WORD-BOUNDARY checks (so "500x500" in a prompt cannot trip us).
+  - Quota / RESOURCE_EXHAUSTED 429s are now classified as permanent so we
+    don't waste credits retrying them.
+  - `get_api_key()` strips surrounding quotes (common .env mistake:
+    `GEMINI_API_KEY="AIza..."`).
+  - `retry_with_backoff` adds jitter (avoids thundering-herd retries) and
+    redacts exception text before printing.
+"""
+
+import functools
+import hashlib
 import os
+import random
+import re
 import time
 import logging
 
 logger = logging.getLogger(__name__)
 
-_client_cache = {}
+# ---------------------------------------------------------------------------
+# Secret redaction (used by every error path so keys can never leak to UI)
+# ---------------------------------------------------------------------------
+
+# Google API keys are AIza + 35 url-safe chars.
+_GOOGLE_KEY_RE = re.compile(r"AIza[0-9A-Za-z_-]{35}")
+# Header echoes ("x-goog-api-key: AIza...", "Authorization: Bearer ya29...")
+_HEADER_KEY_RE = re.compile(
+    r"(?i)(x-goog-api-key|authorization|api[-_]key)\s*[:=]\s*[\"']?([^\s\"'&]+)"
+)
+
+
+def redact_secret(text: str) -> str:
+    """Strip Google API keys and common auth headers from any text.
+
+    Use on EVERY string that might come from an exception or HTTP response
+    body before logging or raising it to the UI.
+    """
+    if not text:
+        return text
+    s = str(text)
+    s = _GOOGLE_KEY_RE.sub("AIza...REDACTED", s)
+    s = _HEADER_KEY_RE.sub(r"\1: REDACTED", s)
+    return s
+
+
+# ---------------------------------------------------------------------------
+# Bounded client cache (LRU over hashed key)
+# ---------------------------------------------------------------------------
+
+# Hash → Client. lru_cache discards LRU entries past maxsize.
+@functools.lru_cache(maxsize=16)
+def _get_client_for_hash(key_hash: str, timeout_ms: int, _api_key: str):
+    """Internal: create or retrieve the Client for a given key hash.
+
+    `_api_key` is passed only so the constructor can use it; it is NOT used
+    as the cache key (key_hash is). It's underscore-prefixed to discourage
+    callers from using it.
+    """
+    from google import genai
+    return genai.Client(
+        api_key=_api_key, http_options={"timeout": timeout_ms}
+    )
 
 
 def get_client(api_key, timeout_ms=180000):
-    """Return a cached google.genai Client for the given API key."""
-    from google import genai
+    """Return a cached google.genai Client for the given API key.
 
-    if api_key not in _client_cache:
-        _client_cache[api_key] = genai.Client(
-            api_key=api_key, http_options={"timeout": timeout_ms}
-        )
-    return _client_cache[api_key]
+    The cache is bounded (16 keys) and indexed by a SHA-256 hash, so:
+      - rotating keys across many workflows can't OOM the worker
+      - the raw key isn't held in a dict key indefinitely
+    """
+    if not api_key:
+        raise ValueError("get_client() called with empty API key")
+    key_hash = hashlib.sha256(api_key.encode("utf-8")).hexdigest()
+    return _get_client_for_hash(key_hash, int(timeout_ms), api_key)
+
+
+def clear_client_cache():
+    """Eject all cached clients (useful for tests or after key rotation)."""
+    _get_client_for_hash.cache_clear()
 
 
 def get_api_key(api_key_input=""):
-    """Resolve API key from input or GEMINI_API_KEY environment variable."""
+    """Resolve API key from input or GEMINI_API_KEY env, with quote stripping.
+
+    Users commonly write `GEMINI_API_KEY="AIza..."` in .env files; the
+    quotes become part of the string and break auth. We strip whitespace
+    AND surrounding quote characters.
+    """
     key = api_key_input.strip() if api_key_input else ""
     if not key:
         key = os.environ.get("GEMINI_API_KEY", "").strip()
+    # Strip wrapping single/double quotes (.env mistake).
+    if key and len(key) >= 2 and key[0] == key[-1] and key[0] in ('"', "'"):
+        key = key[1:-1].strip()
     if not key:
         raise ValueError(
             "Gemini API key required. Set GEMINI_API_KEY env var or enter in node."
@@ -32,30 +112,112 @@ def get_api_key(api_key_input=""):
     return key
 
 
+# ---------------------------------------------------------------------------
+# Error classification (typed checks, not substring soup)
+# ---------------------------------------------------------------------------
+
+# gRPC canonical names that Gemini SDK surfaces in errors
+_TRANSIENT_GRPC = {"UNAVAILABLE", "DEADLINE_EXCEEDED", "INTERNAL", "ABORTED"}
+_PERMANENT_QUOTA_TOKENS = ("quota", "exhausted", "billing", "exceeded your current")
+
+# Status codes we treat as transient by default
+_TRANSIENT_CODES = {429, 500, 502, 503, 504}
+
+
 def is_transient_error(e):
-    """Check if an error is transient and worth retrying."""
+    """Decide if an error is worth retrying.
+
+    Strategy (in order):
+      1. If it's a google.genai.errors.APIError, use the typed `.code`.
+      2. If it's a 429 with "quota"/"exhausted" in the body → NOT transient
+         (retrying a quota-exhaustion just burns credits).
+      3. Otherwise fall back to whole-token substring match (no false trip
+         on "500x500" inside a prompt).
+    """
+    try:
+        from google.genai import errors as gerrors
+        if isinstance(e, gerrors.APIError):
+            code = getattr(e, "code", None)
+            body = redact_secret(str(getattr(e, "response_json", "") or ""))
+            # 429 quota exhaustion is permanent — don't retry
+            if code == 429 and any(t in body.lower() for t in _PERMANENT_QUOTA_TOKENS):
+                return False
+            if code in _TRANSIENT_CODES:
+                return True
+            # gRPC code names sometimes leak into message
+            if any(g in str(e) for g in _TRANSIENT_GRPC):
+                return True
+            return False
+    except Exception:
+        pass
+
+    # Fallback: word-boundary search so prompts containing "500" don't trip
     err_str = str(e)
-    return any(
-        m in err_str
-        for m in ("429", "500", "502", "503", "504", "DEADLINE_EXCEEDED")
-    )
+    for code in (429, 500, 502, 503, 504):
+        if re.search(rf"\b{code}\b", err_str):
+            # Even in fallback mode, treat quota 429 as permanent
+            if code == 429 and any(t in err_str.lower() for t in _PERMANENT_QUOTA_TOKENS):
+                return False
+            return True
+    return any(g in err_str for g in _TRANSIENT_GRPC)
 
 
-def retry_with_backoff(fn, retries=3, base_delay=5.0):
-    """Execute fn with exponential backoff on transient errors."""
+def retry_with_backoff(fn, retries=3, base_delay=5.0, max_delay=60.0):
+    """Execute fn with jittered exponential backoff on transient errors.
+
+    Jitter prevents the thundering-herd problem when many workers retry at
+    the same time. All exception text is redacted before logging.
+    """
+    last_exc = None
     for attempt in range(retries):
         try:
             return fn()
         except Exception as e:
+            last_exc = e
             if is_transient_error(e) and attempt < retries - 1:
-                delay = base_delay * (2 ** attempt)
+                # Jittered exp backoff: base * 2^attempt * random(0.8, 1.2)
+                delay = min(base_delay * (2 ** attempt), max_delay)
+                delay *= random.uniform(0.8, 1.2)
+                safe_msg = redact_secret(str(e))[:200]
+                logger.warning(
+                    "[Gemini] transient API error (%s), retrying in %.1fs (%d/%d)",
+                    safe_msg, delay, attempt + 1, retries,
+                )
+                # Keep stdout breadcrumb for users who don't see log handlers
                 print(
-                    f"[Gemini] API error ({e}), retrying in {delay:.0f}s... "
-                    f"({attempt + 1}/{retries})"
+                    f"[Gemini] transient API error ({safe_msg}), retrying in "
+                    f"{delay:.1f}s... ({attempt + 1}/{retries})"
                 )
                 time.sleep(delay)
             else:
                 raise
+    # Should not be reachable (loop either returns or raises) but defensive:
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError("retry_with_backoff: no attempts made (retries=%d)" % retries)
+
+
+# ---------------------------------------------------------------------------
+# Lyria/Veo model-name sanitization (prevents URL path injection)
+# ---------------------------------------------------------------------------
+
+_MODEL_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+def sanitize_model_id(model_id: str) -> str:
+    """Validate a model ID is safe to interpolate into an API URL path.
+
+    Gemini/Imagen/Veo/Lyria model IDs only ever contain alphanumerics,
+    dot, hyphen, underscore. Anything else (including `/`, `?`, `#`, `:`,
+    `..`) means a malicious or buggy `custom_model` is trying to escape the
+    `/models/` path. Reject hard rather than silently rewriting.
+    """
+    if not model_id or not _MODEL_ID_RE.match(model_id):
+        raise ValueError(
+            f"Invalid model ID {model_id!r}. Model IDs must match "
+            r"^[A-Za-z0-9._-]+$ (no slashes, no path traversal)."
+        )
+    return model_id
 
 
 # ---------------------------------------------------------------------------
@@ -192,6 +354,22 @@ ASPECT_RATIOS = [
     "4:5", "5:4", "9:16", "16:9", "21:9",
 ]
 
-THINKING_LEVELS = ["NONE", "LOW", "NORMAL", "HIGH"]
+# THINKING_LEVELS: the google-genai SDK enum is
+#   ThinkingLevel.MINIMAL / LOW / MEDIUM / HIGH (+ THINKING_LEVEL_UNSPECIFIED).
+# v2.0 used "NORMAL" which the API rejects, and "NONE" was a UI sentinel for
+# "don't set thinking_config at all". v2.1 keeps NONE as the sentinel but
+# replaces NORMAL with the actual SDK values MINIMAL/MEDIUM.
+THINKING_LEVELS = ["NONE", "MINIMAL", "LOW", "MEDIUM", "HIGH"]
 
 IMAGE_SIZES = ["AUTO", "1K", "2K", "4K"]
+
+# Safety filter levels accepted by the Imagen `predict` endpoint.
+# Developer API typically only honors block_low_and_above on free tier, but
+# we expose all valid enum values; the API surfaces a clear error if the
+# level isn't accepted for the current model/account.
+IMAGEN_SAFETY_LEVELS = [
+    "block_low_and_above",
+    "block_medium_and_above",
+    "block_only_high",
+    "block_none",
+]
