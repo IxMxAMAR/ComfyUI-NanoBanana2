@@ -5,12 +5,15 @@ All notable changes to ComfyUI-NanoBanana2 are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.0] — 2026-05-17
+## [2.5.0] — 2026-05-17
 
 Audit-driven release. Two parallel Gemini 3.1 Pro reviews (one focused on
 the API/HTTP/auth/retry layer, one on node correctness/UX) plus first-party
 verification of every Critical and High finding produced 10 verified bug
 fixes, four security hardenings, nine new feature nodes, and 64 tests.
+
+Version bumped to 2.5.0 to leap above the existing registry sequence
+(2.4.2 was the latest published prior to this release).
 
 ### Security — fix immediately if you run shared workflows
 
