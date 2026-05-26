@@ -1,0 +1,261 @@
+{
+  "last_node_id": 4,
+  "last_link_id": 3,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "NanoBanana_APIKey",
+      "pos": [
+        50,
+        50
+      ],
+      "size": [
+        320,
+        94
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "links": [
+            1
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "api",
+        "Node name for S&R": "NanoBanana_APIKey"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 2,
+      "type": "NanoBanana_SafetySettings",
+      "pos": [
+        50,
+        174
+      ],
+      "size": [
+        320,
+        154
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "safety_settings_json",
+          "type": "STRING",
+          "links": [
+            2
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "safety",
+        "Node name for S&R": "NanoBanana_SafetySettings"
+      },
+      "widgets_values": [
+        "BLOCK_LOW_AND_ABOVE",
+        "BLOCK_LOW_AND_ABOVE",
+        "BLOCK_LOW_AND_ABOVE",
+        "BLOCK_LOW_AND_ABOVE"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "NanoBanana_ImageGen",
+      "pos": [
+        430,
+        50
+      ],
+      "size": [
+        320,
+        356
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 1,
+          "widget": {
+            "name": "api_key"
+          }
+        },
+        {
+          "name": "ref_image_1",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_3",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_4",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "safety_settings_json",
+          "type": "STRING",
+          "link": 2,
+          "widget": {
+            "name": "safety_settings_json"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            3
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "gen",
+        "Node name for S&R": "NanoBanana_ImageGen"
+      },
+      "widgets_values": [
+        "gemini-3.1-flash-image-preview",
+        "",
+        "A peaceful nature scene with a meadow, wildflowers, and a calm river",
+        "16:9",
+        "4K",
+        "",
+        "NONE",
+        1.0,
+        -1,
+        1
+      ]
+    },
+    {
+      "id": 4,
+      "type": "PreviewImage",
+      "pos": [
+        810,
+        50
+      ],
+      "size": [
+        320,
+        74
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "recipe_id": "preview",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      3,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      5,
+      "STRING"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "title": "Setup",
+      "bounding": [
+        30,
+        0,
+        360,
+        348
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Generate",
+      "bounding": [
+        410,
+        0,
+        360,
+        426
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Preview",
+      "bounding": [
+        790,
+        0,
+        360,
+        144
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.0,
+      "offset": [
+        0,
+        0
+      ]
+    },
+    "description": "Configure content safety thresholds with the SafetySettings node and pipe them into image gen.",
+    "title": "NanoBanana2 \u2014 Safety Settings Demo",
+    "tier": 1,
+    "pack": "ComfyUI-NanoBanana2"
+  },
+  "version": 0.4
+}
