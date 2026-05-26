@@ -1,0 +1,708 @@
+{
+  "last_node_id": 11,
+  "last_link_id": 14,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "NanoBanana_APIKey",
+      "pos": [
+        50,
+        50
+      ],
+      "size": [
+        320,
+        94
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "links": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "api",
+        "Node name for S&R": "NanoBanana_APIKey"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 2,
+      "type": "NanoBanana_ImagenGen",
+      "pos": [
+        430,
+        50
+      ],
+      "size": [
+        320,
+        274
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 1,
+          "widget": {
+            "name": "api_key"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            6,
+            7,
+            8,
+            9
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "hero",
+        "Node name for S&R": "NanoBanana_ImagenGen"
+      },
+      "widgets_values": [
+        "imagen-4.0-generate-preview-06-06",
+        "Professional product photography of a sleek black smartwatch on a white studio background, soft shadows, high-end commercial style",
+        "",
+        1,
+        "1:1",
+        "",
+        -1,
+        "block_low_and_above",
+        "dont_allow"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "PreviewImage",
+      "pos": [
+        810,
+        50
+      ],
+      "size": [
+        320,
+        74
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "recipe_id": "prev_hero",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 4,
+      "type": "NanoBanana_ImageEdit",
+      "pos": [
+        810,
+        154
+      ],
+      "size": [
+        320,
+        270
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 2,
+          "widget": {
+            "name": "api_key"
+          }
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 7
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "reference_image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            10
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "edit1",
+        "Node name for S&R": "NanoBanana_ImageEdit"
+      },
+      "widgets_values": [
+        "gemini-3.1-flash-image-preview",
+        "",
+        "Change the watch strap colour to rose gold, keep all other elements identical",
+        "",
+        "1:1",
+        "AUTO"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "PreviewImage",
+      "pos": [
+        1190,
+        50
+      ],
+      "size": [
+        320,
+        74
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 10
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "recipe_id": "prev1",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 6,
+      "type": "NanoBanana_ImageEdit",
+      "pos": [
+        810,
+        454
+      ],
+      "size": [
+        320,
+        270
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 3,
+          "widget": {
+            "name": "api_key"
+          }
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 8
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "reference_image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            11
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "edit2",
+        "Node name for S&R": "NanoBanana_ImageEdit"
+      },
+      "widgets_values": [
+        "gemini-3.1-flash-image-preview",
+        "",
+        "Place the watch on a dark slate surface with dramatic moody lighting, keep product identical",
+        "",
+        "1:1",
+        "AUTO"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "PreviewImage",
+      "pos": [
+        1190,
+        154
+      ],
+      "size": [
+        320,
+        74
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 11
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "recipe_id": "prev2",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 8,
+      "type": "NanoBanana_ImageEdit",
+      "pos": [
+        810,
+        754
+      ],
+      "size": [
+        320,
+        270
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 4,
+          "widget": {
+            "name": "api_key"
+          }
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 9
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "reference_image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "reference_image_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "reference_image_3",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            12,
+            13
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "edit3",
+        "Node name for S&R": "NanoBanana_ImageEdit"
+      },
+      "widgets_values": [
+        "gemini-3.1-flash-image-preview",
+        "",
+        "Add a subtle nature background \u2014 blurred green leaves \u2014 while keeping the watch centred and sharp",
+        "",
+        "1:1",
+        "AUTO"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "PreviewImage",
+      "pos": [
+        1190,
+        258
+      ],
+      "size": [
+        320,
+        74
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 12
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "recipe_id": "prev3",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 10,
+      "type": "NanoBanana_Outpaint",
+      "pos": [
+        1570,
+        50
+      ],
+      "size": [
+        320,
+        214
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 5,
+          "widget": {
+            "name": "api_key"
+          }
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            14
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "outpaint",
+        "Node name for S&R": "NanoBanana_Outpaint"
+      },
+      "widgets_values": [
+        "gemini-3.1-flash-image-preview",
+        "",
+        "right",
+        "Extend the studio background naturally to the right for a wide banner format, seamless, clean white gradient",
+        "",
+        "16:9"
+      ]
+    },
+    {
+      "id": 11,
+      "type": "PreviewImage",
+      "pos": [
+        1950,
+        50
+      ],
+      "size": [
+        320,
+        74
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 14
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "recipe_id": "prev_banner",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      1,
+      0,
+      4,
+      0,
+      "STRING"
+    ],
+    [
+      3,
+      1,
+      0,
+      6,
+      0,
+      "STRING"
+    ],
+    [
+      4,
+      1,
+      0,
+      8,
+      0,
+      "STRING"
+    ],
+    [
+      5,
+      1,
+      0,
+      10,
+      0,
+      "STRING"
+    ],
+    [
+      6,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      2,
+      0,
+      4,
+      1,
+      "IMAGE"
+    ],
+    [
+      8,
+      2,
+      0,
+      6,
+      1,
+      "IMAGE"
+    ],
+    [
+      9,
+      2,
+      0,
+      8,
+      1,
+      "IMAGE"
+    ],
+    [
+      10,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      11,
+      6,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      12,
+      8,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      13,
+      8,
+      0,
+      10,
+      1,
+      "IMAGE"
+    ],
+    [
+      14,
+      10,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "title": "Setup",
+      "bounding": [
+        30,
+        0,
+        360,
+        164
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Hero Shot",
+      "bounding": [
+        410,
+        0,
+        740,
+        344
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Variation 1",
+      "bounding": [
+        790,
+        0,
+        740,
+        444
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Variation 2",
+      "bounding": [
+        790,
+        104,
+        740,
+        640
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Variation 3",
+      "bounding": [
+        790,
+        208,
+        740,
+        836
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Banner",
+      "bounding": [
+        1550,
+        0,
+        740,
+        284
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.0,
+      "offset": [
+        0,
+        0
+      ]
+    },
+    "description": "Generate a hero product shot with ImagenGen, create 3 colour/style variations with ImageEdit, then extend the final variation with Outpaint for a wide banner.",
+    "title": "NanoBanana2 \u2014 Product Photo Kit",
+    "tier": 2,
+    "pack": "ComfyUI-NanoBanana2"
+  },
+  "version": 0.4
+}

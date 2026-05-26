@@ -1,0 +1,403 @@
+{
+  "last_node_id": 6,
+  "last_link_id": 7,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "NanoBanana_APIKey",
+      "pos": [
+        50,
+        50
+      ],
+      "size": [
+        320,
+        94
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "links": [
+            1,
+            2,
+            3
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "api",
+        "Node name for S&R": "NanoBanana_APIKey"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 2,
+      "type": "NanoBanana_TextGenSearch",
+      "pos": [
+        430,
+        50
+      ],
+      "size": [
+        320,
+        208
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 1,
+          "widget": {
+            "name": "api_key"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            4
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "citations_json",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "recipe_id": "search",
+        "Node name for S&R": "NanoBanana_TextGenSearch"
+      },
+      "widgets_values": [
+        "gemini-2.5-flash",
+        "What are the latest breakthroughs in large language model efficiency in 2025\u20132026?",
+        "",
+        "",
+        0.4
+      ]
+    },
+    {
+      "id": 3,
+      "type": "NanoBanana_PromptRefiner",
+      "pos": [
+        810,
+        50
+      ],
+      "size": [
+        320,
+        234
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 2,
+          "widget": {
+            "name": "api_key"
+          }
+        },
+        {
+          "name": "base_prompt",
+          "type": "STRING",
+          "link": 4,
+          "widget": {
+            "name": "base_prompt"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "refined_prompt",
+          "type": "STRING",
+          "links": [
+            5,
+            6
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "refine",
+        "Node name for S&R": "NanoBanana_PromptRefiner"
+      },
+      "widgets_values": [
+        "gemini-2.5-flash",
+        "",
+        "general",
+        "",
+        "NONE",
+        0.3
+      ]
+    },
+    {
+      "id": 4,
+      "type": "NanoBanana_TTS",
+      "pos": [
+        1190,
+        50
+      ],
+      "size": [
+        320,
+        194
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 3,
+          "widget": {
+            "name": "api_key"
+          }
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 5,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            7
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "tts",
+        "Node name for S&R": "NanoBanana_TTS"
+      },
+      "widgets_values": [
+        "gemini-2.5-flash",
+        "Kore",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 5,
+      "type": "ShowText",
+      "pos": [
+        1570,
+        50
+      ],
+      "size": [
+        320,
+        94
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 6,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "text_out",
+        "Node name for S&R": "ShowText"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 6,
+      "type": "PreviewAudio",
+      "pos": [
+        1570,
+        174
+      ],
+      "size": [
+        320,
+        74
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 7
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "recipe_id": "audio_out",
+        "Node name for S&R": "PreviewAudio"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "STRING"
+    ],
+    [
+      3,
+      1,
+      0,
+      4,
+      0,
+      "STRING"
+    ],
+    [
+      4,
+      2,
+      0,
+      3,
+      1,
+      "STRING"
+    ],
+    [
+      5,
+      3,
+      0,
+      4,
+      1,
+      "STRING"
+    ],
+    [
+      6,
+      3,
+      0,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      7,
+      4,
+      0,
+      6,
+      0,
+      "AUDIO"
+    ]
+  ],
+  "groups": [
+    {
+      "title": "Setup",
+      "bounding": [
+        30,
+        0,
+        360,
+        164
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Research",
+      "bounding": [
+        410,
+        0,
+        360,
+        278
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Refine",
+      "bounding": [
+        790,
+        0,
+        360,
+        304
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Narrate",
+      "bounding": [
+        1170,
+        0,
+        740,
+        268
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Text Out",
+      "bounding": [
+        1550,
+        0,
+        360,
+        164
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.0,
+      "offset": [
+        0,
+        0
+      ]
+    },
+    "description": "Run a live Gemini web search, refine the result into a clean brief, then narrate it with TTS.",
+    "title": "NanoBanana2 \u2014 Research Brief",
+    "tier": 2,
+    "pack": "ComfyUI-NanoBanana2"
+  },
+  "version": 0.4
+}

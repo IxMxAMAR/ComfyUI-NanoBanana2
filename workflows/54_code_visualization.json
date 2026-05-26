@@ -1,0 +1,341 @@
+{
+  "last_node_id": 5,
+  "last_link_id": 5,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "NanoBanana_APIKey",
+      "pos": [
+        50,
+        50
+      ],
+      "size": [
+        320,
+        94
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "links": [
+            1,
+            2
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "api",
+        "Node name for S&R": "NanoBanana_APIKey"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 2,
+      "type": "NanoBanana_TextGenCode",
+      "pos": [
+        430,
+        50
+      ],
+      "size": [
+        320,
+        202
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 1,
+          "widget": {
+            "name": "api_key"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            3,
+            4
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "executed_code",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 1
+        },
+        {
+          "name": "exec_result",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "recipe_id": "code",
+        "Node name for S&R": "NanoBanana_TextGenCode"
+      },
+      "widgets_values": [
+        "gemini-2.5-flash",
+        "Write a Python function that returns the first N Fibonacci numbers using an iterative approach. Include a brief docstring and a sample call at the bottom.",
+        "",
+        0.2
+      ]
+    },
+    {
+      "id": 3,
+      "type": "NanoBanana_TextGen",
+      "pos": [
+        810,
+        50
+      ],
+      "size": [
+        320,
+        334
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "api_key",
+          "type": "STRING",
+          "link": 2,
+          "widget": {
+            "name": "api_key"
+          }
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 3,
+          "widget": {
+            "name": "prompt"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            5
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "explain",
+        "Node name for S&R": "NanoBanana_TextGen"
+      },
+      "widgets_values": [
+        "gemini-2.5-flash",
+        "",
+        "",
+        0.5,
+        0.95,
+        0,
+        0,
+        "NONE",
+        0,
+        -1,
+        ""
+      ]
+    },
+    {
+      "id": 4,
+      "type": "ShowText",
+      "pos": [
+        1190,
+        50
+      ],
+      "size": [
+        320,
+        94
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 4,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "code_out",
+        "Node name for S&R": "ShowText"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 5,
+      "type": "ShowText",
+      "pos": [
+        1190,
+        174
+      ],
+      "size": [
+        320,
+        94
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 5,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "explain_out",
+        "Node name for S&R": "ShowText"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "STRING"
+    ],
+    [
+      3,
+      2,
+      0,
+      3,
+      1,
+      "STRING"
+    ],
+    [
+      4,
+      2,
+      0,
+      4,
+      0,
+      "STRING"
+    ],
+    [
+      5,
+      3,
+      0,
+      5,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "title": "Setup",
+      "bounding": [
+        30,
+        0,
+        360,
+        164
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Code Gen",
+      "bounding": [
+        410,
+        0,
+        360,
+        272
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Explanation",
+      "bounding": [
+        790,
+        0,
+        360,
+        404
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Output",
+      "bounding": [
+        1170,
+        0,
+        360,
+        288
+      ],
+      "color": "#3F789E",
+      "font_size": 24,
+      "locked": false
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.0,
+      "offset": [
+        0,
+        0
+      ]
+    },
+    "description": "Generate a Fibonacci implementation with TextGenCode, then explain the algorithm in plain English with TextGen. Both outputs shown side-by-side.",
+    "title": "NanoBanana2 \u2014 Code + Explanation",
+    "tier": 2,
+    "pack": "ComfyUI-NanoBanana2"
+  },
+  "version": 0.4
+}
