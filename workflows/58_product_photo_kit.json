@@ -11,7 +11,7 @@
       ],
       "size": [
         320,
-        104
+        88
       ],
       "flags": {},
       "order": 1,
@@ -48,7 +48,7 @@
       ],
       "size": [
         320,
-        360
+        384
       ],
       "flags": {},
       "order": 2,
@@ -81,7 +81,8 @@
         "Node name for S&R": "NanoBanana_ImagenGen"
       },
       "widgets_values": [
-        "imagen-4.0-generate-preview-06-06",
+        "",
+        "imagen-4.0-ultra-generate-001",
         "Professional product photography of a sleek black smartwatch on a white studio background, soft shadows, high-end commercial style",
         "",
         1,
@@ -102,7 +103,7 @@
       ],
       "size": [
         320,
-        82
+        56
       ],
       "flags": {},
       "order": 3,
@@ -126,11 +127,11 @@
       "type": "NanoBanana_ImageEdit",
       "pos": [
         860,
-        192
+        166
       ],
       "size": [
         320,
-        424
+        472
       ],
       "flags": {},
       "order": 4,
@@ -185,6 +186,7 @@
         "Node name for S&R": "NanoBanana_ImageEdit"
       },
       "widgets_values": [
+        "",
         "gemini-3.1-flash-image-preview",
         "",
         "Change the watch strap colour to rose gold, keep all other elements identical",
@@ -202,7 +204,7 @@
       ],
       "size": [
         320,
-        82
+        56
       ],
       "flags": {},
       "order": 5,
@@ -226,11 +228,11 @@
       "type": "NanoBanana_ImageEdit",
       "pos": [
         860,
-        666
+        688
       ],
       "size": [
         320,
-        424
+        472
       ],
       "flags": {},
       "order": 6,
@@ -285,6 +287,7 @@
         "Node name for S&R": "NanoBanana_ImageEdit"
       },
       "widgets_values": [
+        "",
         "gemini-3.1-flash-image-preview",
         "",
         "Place the watch on a dark slate surface with dramatic moody lighting, keep product identical",
@@ -298,11 +301,11 @@
       "type": "PreviewImage",
       "pos": [
         1260,
-        192
+        166
       ],
       "size": [
         320,
-        82
+        56
       ],
       "flags": {},
       "order": 7,
@@ -326,11 +329,11 @@
       "type": "NanoBanana_ImageEdit",
       "pos": [
         860,
-        1140
+        1210
       ],
       "size": [
         320,
-        424
+        472
       ],
       "flags": {},
       "order": 8,
@@ -386,6 +389,7 @@
         "Node name for S&R": "NanoBanana_ImageEdit"
       },
       "widgets_values": [
+        "",
         "gemini-3.1-flash-image-preview",
         "",
         "Add a subtle nature background \u2014 blurred green leaves \u2014 while keeping the watch centred and sharp",
@@ -399,11 +403,11 @@
       "type": "PreviewImage",
       "pos": [
         1260,
-        324
+        272
       ],
       "size": [
         320,
-        82
+        56
       ],
       "flags": {},
       "order": 9,
@@ -431,7 +435,7 @@
       ],
       "size": [
         320,
-        352
+        392
       ],
       "flags": {},
       "order": 10,
@@ -466,6 +470,7 @@
         "Node name for S&R": "NanoBanana_Outpaint"
       },
       "widgets_values": [
+        "",
         "gemini-3.1-flash-image-preview",
         "",
         "right",
@@ -483,7 +488,7 @@
       ],
       "size": [
         320,
-        82
+        56
       ],
       "flags": {},
       "order": 11,
@@ -624,7 +629,7 @@
         35,
         -1,
         370,
-        190
+        174
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -636,7 +641,7 @@
         435,
         -1,
         770,
-        446
+        470
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -648,7 +653,7 @@
         835,
         -1,
         770,
-        642
+        664
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -658,9 +663,9 @@
       "title": "Variation 2",
       "bounding": [
         835,
-        131,
+        105,
         770,
-        984
+        1080
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -670,9 +675,9 @@
       "title": "Variation 3",
       "bounding": [
         835,
-        263,
+        211,
         770,
-        1326
+        1496
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -684,7 +689,7 @@
         1635,
         -1,
         770,
-        438
+        478
       ],
       "color": "#3F789E",
       "font_size": 24,

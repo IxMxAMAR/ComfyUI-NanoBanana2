@@ -11,7 +11,7 @@
       ],
       "size": [
         320,
-        104
+        88
       ],
       "flags": {},
       "order": 1,
@@ -40,11 +40,11 @@
       "type": "NanoBanana_ModelSelector",
       "pos": [
         60,
-        214
+        198
       ],
       "size": [
         320,
-        148
+        136
       ],
       "flags": {},
       "order": 2,
@@ -75,11 +75,11 @@
       "type": "LoadImage",
       "pos": [
         60,
-        412
+        384
       ],
       "size": [
         320,
-        122
+        108
       ],
       "flags": {},
       "order": 3,
@@ -118,7 +118,7 @@
       ],
       "size": [
         320,
-        424
+        472
       ],
       "flags": {},
       "order": 4,
@@ -181,7 +181,9 @@
         "Node name for S&R": "NanoBanana_ImageEdit"
       },
       "widgets_values": [
+        "",
         "gemini-3.1-flash-image-preview",
+        "",
         "Change the sky to a vibrant sunset with purple and orange hues",
         "",
         "AUTO",
@@ -197,7 +199,7 @@
       ],
       "size": [
         320,
-        82
+        56
       ],
       "flags": {},
       "order": 5,
@@ -258,7 +260,7 @@
         35,
         -1,
         370,
-        560
+        518
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -270,7 +272,7 @@
         435,
         -1,
         370,
-        510
+        558
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -282,7 +284,7 @@
         835,
         -1,
         370,
-        168
+        142
       ],
       "color": "#3F789E",
       "font_size": 24,

@@ -11,7 +11,7 @@
       ],
       "size": [
         320,
-        104
+        88
       ],
       "flags": {},
       "order": 1,
@@ -44,7 +44,7 @@
       ],
       "size": [
         320,
-        316
+        336
       ],
       "flags": {},
       "order": 2,
@@ -74,6 +74,7 @@
         "Node name for S&R": "NanoBanana_TTSMultiSpeaker"
       },
       "widgets_values": [
+        "",
         "gemini-2.5-flash-preview-tts",
         "Alice: Hi Bob, how are you today?\nBob: I'm great, thanks for asking! Just finished a big project.\nAlice: That's wonderful! What was it about?\nBob: I built an AI voice assistant using NanoBanana2 in ComfyUI.",
         "Alice",
@@ -92,7 +93,7 @@
       ],
       "size": [
         320,
-        82
+        56
       ],
       "flags": {},
       "order": 3,
@@ -137,7 +138,7 @@
         35,
         -1,
         370,
-        190
+        174
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -149,7 +150,7 @@
         435,
         -1,
         370,
-        402
+        422
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -161,7 +162,7 @@
         835,
         -1,
         370,
-        168
+        142
       ],
       "color": "#3F789E",
       "font_size": 24,

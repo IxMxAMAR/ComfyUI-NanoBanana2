@@ -1,6 +1,6 @@
 {
-  "last_node_id": 5,
-  "last_link_id": 6,
+  "last_node_id": 6,
+  "last_link_id": 7,
   "nodes": [
     {
       "id": 1,
@@ -11,7 +11,7 @@
       ],
       "size": [
         320,
-        104
+        88
       ],
       "flags": {},
       "order": 1,
@@ -46,7 +46,7 @@
       ],
       "size": [
         320,
-        188
+        180
       ],
       "flags": {},
       "order": 2,
@@ -82,6 +82,7 @@
         "Node name for S&R": "NanoBanana_FilesUpload"
       },
       "widgets_values": [
+        "",
         "C:/ComfyUI/input/document.pdf",
         "document.pdf",
         "application/pdf"
@@ -96,7 +97,7 @@
       ],
       "size": [
         320,
-        316
+        336
       ],
       "flags": {},
       "order": 3,
@@ -124,7 +125,8 @@
           "name": "text",
           "type": "STRING",
           "links": [
-            5
+            5,
+            6
           ],
           "slot_index": 0
         }
@@ -134,7 +136,9 @@
         "Node name for S&R": "NanoBanana_VisionWithFile"
       },
       "widgets_values": [
+        "",
         "gemini-2.5-flash",
+        "",
         "application/pdf",
         "Please summarise the key findings of this document in 3\u20134 sentences suitable for a spoken answer.",
         "",
@@ -151,7 +155,7 @@
       ],
       "size": [
         320,
-        330
+        368
       ],
       "flags": {},
       "order": 4,
@@ -189,7 +193,9 @@
         "Node name for S&R": "NanoBanana_TTS"
       },
       "widgets_values": [
-        "gemini-2.5-flash",
+        "",
+        "gemini-2.5-flash-preview-tts",
+        "",
         "Kore",
         "",
         ""
@@ -197,17 +203,57 @@
     },
     {
       "id": 5,
-      "type": "PreviewAudio",
+      "type": "ShowText|pysssss",
       "pos": [
         1660,
-        214
+        60
       ],
       "size": [
         320,
-        82
+        88
       ],
       "flags": {},
       "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 6,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "text_out",
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 6,
+      "type": "PreviewAudio",
+      "pos": [
+        1660,
+        198
+      ],
+      "size": [
+        320,
+        56
+      ],
+      "flags": {},
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
@@ -266,10 +312,18 @@
       "STRING"
     ],
     [
+      6,
+      3,
+      0,
+      5,
+      0,
+      "STRING"
+    ],
+    [
       7,
       4,
       0,
-      5,
+      6,
       0,
       "AUDIO"
     ]
@@ -281,7 +335,7 @@
         35,
         -1,
         370,
-        190
+        174
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -293,7 +347,7 @@
         435,
         -1,
         370,
-        274
+        266
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -305,7 +359,7 @@
         835,
         -1,
         370,
-        402
+        422
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -317,7 +371,7 @@
         1235,
         -1,
         370,
-        416
+        454
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -329,7 +383,7 @@
         1635,
         -1,
         370,
-        322
+        280
       ],
       "color": "#3F789E",
       "font_size": 24,

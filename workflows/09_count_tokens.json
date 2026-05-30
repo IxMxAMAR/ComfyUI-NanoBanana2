@@ -1,6 +1,6 @@
 {
-  "last_node_id": 2,
-  "last_link_id": 1,
+  "last_node_id": 3,
+  "last_link_id": 2,
   "nodes": [
     {
       "id": 1,
@@ -11,7 +11,7 @@
       ],
       "size": [
         320,
-        104
+        88
       ],
       "flags": {},
       "order": 1,
@@ -44,7 +44,7 @@
       ],
       "size": [
         320,
-        228
+        240
       ],
       "flags": {},
       "order": 2,
@@ -63,7 +63,9 @@
         {
           "name": "token_count",
           "type": "INT",
-          "links": [],
+          "links": [
+            2
+          ],
           "slot_index": 0
         }
       ],
@@ -72,8 +74,49 @@
         "Node name for S&R": "NanoBanana_CountTokens"
       },
       "widgets_values": [
+        "",
         "gemini-flash-latest",
         "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. ",
+        ""
+      ]
+    },
+    {
+      "id": 3,
+      "type": "ShowText|pysssss",
+      "pos": [
+        860,
+        60
+      ],
+      "size": [
+        320,
+        88
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 2,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "recipe_id": "out",
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
         ""
       ]
     }
@@ -86,6 +129,14 @@
       2,
       0,
       "STRING"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "INT"
     ]
   ],
   "groups": [
@@ -95,7 +146,7 @@
         35,
         -1,
         370,
-        190
+        174
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -107,7 +158,7 @@
         435,
         -1,
         370,
-        314
+        326
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -119,7 +170,7 @@
         835,
         -1,
         370,
-        190
+        174
       ],
       "color": "#3F789E",
       "font_size": 24,

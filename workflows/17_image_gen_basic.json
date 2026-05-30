@@ -11,7 +11,7 @@
       ],
       "size": [
         320,
-        104
+        88
       ],
       "flags": {},
       "order": 1,
@@ -40,11 +40,11 @@
       "type": "NanoBanana_ModelSelector",
       "pos": [
         60,
-        214
+        198
       ],
       "size": [
         320,
-        148
+        136
       ],
       "flags": {},
       "order": 2,
@@ -79,7 +79,7 @@
       ],
       "size": [
         320,
-        516
+        572
       ],
       "flags": {},
       "order": 3,
@@ -137,7 +137,9 @@
         "Node name for S&R": "NanoBanana_ImageGen"
       },
       "widgets_values": [
+        "",
         "gemini-3.1-flash-image-preview",
+        "",
         "A detailed oil painting of a serene mountain lake at sunrise, with mist rising from the water, pine forests, and snow-capped peaks reflected perfectly in the still surface. Masterpiece quality.",
         "16:9",
         "4K",
@@ -159,7 +161,7 @@
       ],
       "size": [
         320,
-        82
+        56
       ],
       "flags": {},
       "order": 4,
@@ -212,7 +214,7 @@
         35,
         -1,
         370,
-        388
+        360
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -224,7 +226,7 @@
         435,
         -1,
         370,
-        602
+        658
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -236,7 +238,7 @@
         835,
         -1,
         370,
-        168
+        142
       ],
       "color": "#3F789E",
       "font_size": 24,
