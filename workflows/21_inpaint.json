@@ -6,12 +6,12 @@
       "id": 1,
       "type": "NanoBanana_APIKey",
       "pos": [
-        50,
-        50
+        60,
+        60
       ],
       "size": [
         320,
-        94
+        104
       ],
       "flags": {},
       "order": 1,
@@ -39,12 +39,12 @@
       "id": 2,
       "type": "NanoBanana_ModelSelector",
       "pos": [
-        50,
-        174
+        60,
+        214
       ],
       "size": [
         320,
-        134
+        148
       ],
       "flags": {},
       "order": 2,
@@ -74,12 +74,12 @@
       "id": 3,
       "type": "LoadImage",
       "pos": [
-        50,
-        338
+        60,
+        412
       ],
       "size": [
         320,
-        108
+        122
       ],
       "flags": {},
       "order": 3,
@@ -115,12 +115,12 @@
       "id": 4,
       "type": "NanoBanana_Inpaint",
       "pos": [
-        430,
-        50
+        460,
+        60
       ],
       "size": [
         320,
-        202
+        344
       ],
       "flags": {},
       "order": 4,
@@ -182,12 +182,12 @@
       "id": 5,
       "type": "PreviewImage",
       "pos": [
-        810,
-        50
+        860,
+        60
       ],
       "size": [
         320,
-        74
+        82
       ],
       "flags": {},
       "order": 5,
@@ -253,10 +253,10 @@
     {
       "title": "Setup",
       "bounding": [
-        30,
-        0,
-        360,
-        466
+        35,
+        -1,
+        370,
+        560
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -265,10 +265,10 @@
     {
       "title": "Generate",
       "bounding": [
-        410,
-        0,
-        360,
-        272
+        435,
+        -1,
+        370,
+        430
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -277,10 +277,10 @@
     {
       "title": "Preview",
       "bounding": [
-        790,
-        0,
-        360,
-        144
+        835,
+        -1,
+        370,
+        168
       ],
       "color": "#3F789E",
       "font_size": 24,

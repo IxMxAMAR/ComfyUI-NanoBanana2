@@ -6,12 +6,12 @@
       "id": 1,
       "type": "NanoBanana_APIKey",
       "pos": [
-        50,
-        50
+        60,
+        60
       ],
       "size": [
         320,
-        94
+        104
       ],
       "flags": {},
       "order": 1,
@@ -45,12 +45,12 @@
       "id": 2,
       "type": "LoadAudio",
       "pos": [
-        50,
-        174
+        60,
+        214
       ],
       "size": [
         320,
-        94
+        104
       ],
       "flags": {},
       "order": 2,
@@ -78,12 +78,12 @@
       "id": 3,
       "type": "NanoBanana_AudioTranscribe",
       "pos": [
-        430,
-        50
+        460,
+        60
       ],
       "size": [
         320,
-        174
+        250
       ],
       "flags": {},
       "order": 3,
@@ -130,12 +130,12 @@
       "id": 4,
       "type": "NanoBanana_TextGen",
       "pos": [
-        810,
-        50
+        860,
+        60
       ],
       "size": [
         320,
-        334
+        484
       ],
       "flags": {},
       "order": 4,
@@ -183,6 +183,7 @@
         "NONE",
         0,
         -1,
+        "randomize",
         ""
       ]
     },
@@ -190,12 +191,12 @@
       "id": 5,
       "type": "NanoBanana_TextGen",
       "pos": [
-        810,
-        414
+        860,
+        594
       ],
       "size": [
         320,
-        334
+        484
       ],
       "flags": {},
       "order": 5,
@@ -243,6 +244,7 @@
         "NONE",
         0,
         -1,
+        "randomize",
         ""
       ]
     },
@@ -250,12 +252,12 @@
       "id": 6,
       "type": "NanoBanana_TextGen",
       "pos": [
-        810,
-        778
+        860,
+        1128
       ],
       "size": [
         320,
-        334
+        484
       ],
       "flags": {},
       "order": 6,
@@ -303,6 +305,7 @@
         "NONE",
         0,
         -1,
+        "randomize",
         ""
       ]
     },
@@ -310,12 +313,12 @@
       "id": 7,
       "type": "NanoBanana_TTS",
       "pos": [
-        1190,
-        50
+        1260,
+        60
       ],
       "size": [
         320,
-        194
+        330
       ],
       "flags": {},
       "order": 7,
@@ -363,12 +366,12 @@
       "id": 8,
       "type": "PreviewAudio",
       "pos": [
-        1570,
-        50
+        1660,
+        60
       ],
       "size": [
         320,
-        74
+        82
       ],
       "flags": {},
       "order": 8,
@@ -391,12 +394,12 @@
       "id": 9,
       "type": "NanoBanana_TTS",
       "pos": [
-        1190,
-        274
+        1260,
+        440
       ],
       "size": [
         320,
-        194
+        330
       ],
       "flags": {},
       "order": 9,
@@ -444,12 +447,12 @@
       "id": 10,
       "type": "PreviewAudio",
       "pos": [
-        1570,
-        154
+        1660,
+        192
       ],
       "size": [
         320,
-        74
+        82
       ],
       "flags": {},
       "order": 10,
@@ -472,12 +475,12 @@
       "id": 11,
       "type": "NanoBanana_TTS",
       "pos": [
-        1190,
-        498
+        1260,
+        820
       ],
       "size": [
         320,
-        194
+        330
       ],
       "flags": {},
       "order": 11,
@@ -525,12 +528,12 @@
       "id": 12,
       "type": "PreviewAudio",
       "pos": [
-        1570,
-        258
+        1660,
+        324
       ],
       "size": [
         320,
-        74
+        82
       ],
       "flags": {},
       "order": 12,
@@ -692,10 +695,10 @@
     {
       "title": "Setup",
       "bounding": [
-        30,
-        0,
-        360,
-        288
+        35,
+        -1,
+        370,
+        344
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -704,10 +707,10 @@
     {
       "title": "Transcribe",
       "bounding": [
-        410,
-        0,
-        360,
-        244
+        435,
+        -1,
+        370,
+        336
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -716,10 +719,10 @@
     {
       "title": "Translate",
       "bounding": [
-        790,
-        0,
-        360,
-        1132
+        835,
+        -1,
+        370,
+        1638
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -728,10 +731,10 @@
     {
       "title": "Speak FR",
       "bounding": [
-        1170,
-        0,
-        740,
-        264
+        1235,
+        -1,
+        770,
+        416
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -740,10 +743,10 @@
     {
       "title": "Speak ES",
       "bounding": [
-        1170,
-        104,
-        740,
-        384
+        1235,
+        131,
+        770,
+        664
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -752,10 +755,10 @@
     {
       "title": "Speak DE",
       "bounding": [
-        1170,
-        208,
-        740,
-        504
+        1235,
+        263,
+        770,
+        912
       ],
       "color": "#3F789E",
       "font_size": 24,

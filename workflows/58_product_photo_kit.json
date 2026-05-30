@@ -6,12 +6,12 @@
       "id": 1,
       "type": "NanoBanana_APIKey",
       "pos": [
-        50,
-        50
+        60,
+        60
       ],
       "size": [
         320,
-        94
+        104
       ],
       "flags": {},
       "order": 1,
@@ -43,12 +43,12 @@
       "id": 2,
       "type": "NanoBanana_ImagenGen",
       "pos": [
-        430,
-        50
+        460,
+        60
       ],
       "size": [
         320,
-        274
+        360
       ],
       "flags": {},
       "order": 2,
@@ -88,6 +88,7 @@
         "1:1",
         "",
         -1,
+        "randomize",
         "block_low_and_above",
         "dont_allow"
       ]
@@ -96,12 +97,12 @@
       "id": 3,
       "type": "PreviewImage",
       "pos": [
-        810,
-        50
+        860,
+        60
       ],
       "size": [
         320,
-        74
+        82
       ],
       "flags": {},
       "order": 3,
@@ -124,12 +125,12 @@
       "id": 4,
       "type": "NanoBanana_ImageEdit",
       "pos": [
-        810,
-        154
+        860,
+        192
       ],
       "size": [
         320,
-        270
+        424
       ],
       "flags": {},
       "order": 4,
@@ -196,12 +197,12 @@
       "id": 5,
       "type": "PreviewImage",
       "pos": [
-        1190,
-        50
+        1260,
+        60
       ],
       "size": [
         320,
-        74
+        82
       ],
       "flags": {},
       "order": 5,
@@ -224,12 +225,12 @@
       "id": 6,
       "type": "NanoBanana_ImageEdit",
       "pos": [
-        810,
-        454
+        860,
+        666
       ],
       "size": [
         320,
-        270
+        424
       ],
       "flags": {},
       "order": 6,
@@ -296,12 +297,12 @@
       "id": 7,
       "type": "PreviewImage",
       "pos": [
-        1190,
-        154
+        1260,
+        192
       ],
       "size": [
         320,
-        74
+        82
       ],
       "flags": {},
       "order": 7,
@@ -324,12 +325,12 @@
       "id": 8,
       "type": "NanoBanana_ImageEdit",
       "pos": [
-        810,
-        754
+        860,
+        1140
       ],
       "size": [
         320,
-        270
+        424
       ],
       "flags": {},
       "order": 8,
@@ -397,12 +398,12 @@
       "id": 9,
       "type": "PreviewImage",
       "pos": [
-        1190,
-        258
+        1260,
+        324
       ],
       "size": [
         320,
-        74
+        82
       ],
       "flags": {},
       "order": 9,
@@ -425,12 +426,12 @@
       "id": 10,
       "type": "NanoBanana_Outpaint",
       "pos": [
-        1570,
-        50
+        1660,
+        60
       ],
       "size": [
         320,
-        214
+        352
       ],
       "flags": {},
       "order": 10,
@@ -477,12 +478,12 @@
       "id": 11,
       "type": "PreviewImage",
       "pos": [
-        1950,
-        50
+        2060,
+        60
       ],
       "size": [
         320,
-        74
+        82
       ],
       "flags": {},
       "order": 11,
@@ -620,10 +621,10 @@
     {
       "title": "Setup",
       "bounding": [
-        30,
-        0,
-        360,
-        164
+        35,
+        -1,
+        370,
+        190
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -632,10 +633,10 @@
     {
       "title": "Hero Shot",
       "bounding": [
-        410,
-        0,
-        740,
-        344
+        435,
+        -1,
+        770,
+        446
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -644,10 +645,10 @@
     {
       "title": "Variation 1",
       "bounding": [
-        790,
-        0,
-        740,
-        444
+        835,
+        -1,
+        770,
+        642
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -656,10 +657,10 @@
     {
       "title": "Variation 2",
       "bounding": [
-        790,
-        104,
-        740,
-        640
+        835,
+        131,
+        770,
+        984
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -668,10 +669,10 @@
     {
       "title": "Variation 3",
       "bounding": [
-        790,
-        208,
-        740,
-        836
+        835,
+        263,
+        770,
+        1326
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -680,10 +681,10 @@
     {
       "title": "Banner",
       "bounding": [
-        1550,
-        0,
-        740,
-        284
+        1635,
+        -1,
+        770,
+        438
       ],
       "color": "#3F789E",
       "font_size": 24,

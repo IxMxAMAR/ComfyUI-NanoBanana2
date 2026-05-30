@@ -1,17 +1,17 @@
 {
-  "last_node_id": 5,
-  "last_link_id": 4,
+  "last_node_id": 4,
+  "last_link_id": 3,
   "nodes": [
     {
       "id": 1,
       "type": "NanoBanana_APIKey",
       "pos": [
-        50,
-        50
+        60,
+        60
       ],
       "size": [
         320,
-        94
+        104
       ],
       "flags": {},
       "order": 1,
@@ -39,12 +39,12 @@
       "id": 2,
       "type": "NanoBanana_ModelSelector",
       "pos": [
-        50,
-        174
+        60,
+        214
       ],
       "size": [
         320,
-        134
+        148
       ],
       "flags": {},
       "order": 2,
@@ -74,12 +74,12 @@
       "id": 3,
       "type": "LoadImage",
       "pos": [
-        50,
-        338
+        60,
+        412
       ],
       "size": [
         320,
-        108
+        122
       ],
       "flags": {},
       "order": 3,
@@ -113,12 +113,12 @@
       "id": 4,
       "type": "NanoBanana_Vision",
       "pos": [
-        430,
-        50
+        460,
+        60
       ],
       "size": [
         320,
-        256
+        406
       ],
       "flags": {},
       "order": 4,
@@ -165,9 +165,7 @@
         {
           "name": "text",
           "type": "STRING",
-          "links": [
-            4
-          ],
+          "links": [],
           "slot_index": 0
         }
       ],
@@ -182,44 +180,6 @@
         0.7,
         false
       ]
-    },
-    {
-      "id": 5,
-      "type": "ShowText",
-      "pos": [
-        810,
-        50
-      ],
-      "size": [
-        320,
-        94
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "text",
-          "type": "STRING",
-          "link": 4,
-          "widget": {
-            "name": "text"
-          }
-        }
-      ],
-      "outputs": [
-        {
-          "name": "text",
-          "type": "STRING",
-          "links": [],
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "recipe_id": "out",
-        "Node name for S&R": "ShowText"
-      },
-      "widgets_values": []
     }
   ],
   "links": [
@@ -246,24 +206,16 @@
       4,
       2,
       "IMAGE"
-    ],
-    [
-      4,
-      4,
-      0,
-      5,
-      0,
-      "STRING"
     ]
   ],
   "groups": [
     {
       "title": "Setup",
       "bounding": [
-        30,
-        0,
-        360,
-        466
+        35,
+        -1,
+        370,
+        560
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -272,10 +224,10 @@
     {
       "title": "Action",
       "bounding": [
-        410,
-        0,
-        360,
-        326
+        435,
+        -1,
+        370,
+        492
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -284,10 +236,10 @@
     {
       "title": "Output",
       "bounding": [
-        790,
-        0,
-        360,
-        164
+        835,
+        -1,
+        370,
+        190
       ],
       "color": "#3F789E",
       "font_size": 24,
