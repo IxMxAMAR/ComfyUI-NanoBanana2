@@ -18,6 +18,10 @@ try:
         NEW_NODE_CLASS_MAPPINGS as _EXTRA_CLASSES,
         NEW_NODE_DISPLAY_NAME_MAPPINGS as _EXTRA_NAMES,
     )
+    from .network_route import (
+        NODE_CLASS_MAPPINGS as _NET_CLASSES,
+        NODE_DISPLAY_NAME_MAPPINGS as _NET_NAMES,
+    )
 except ImportError:
     # Flat-import fallback (tests / direct execution).
     from nanobanana_node import (
@@ -28,8 +32,12 @@ except ImportError:
         NEW_NODE_CLASS_MAPPINGS as _EXTRA_CLASSES,
         NEW_NODE_DISPLAY_NAME_MAPPINGS as _EXTRA_NAMES,
     )
+    from network_route import (
+        NODE_CLASS_MAPPINGS as _NET_CLASSES,
+        NODE_DISPLAY_NAME_MAPPINGS as _NET_NAMES,
+    )
 
-NODE_CLASS_MAPPINGS = {**_CORE_CLASSES, **_EXTRA_CLASSES}
-NODE_DISPLAY_NAME_MAPPINGS = {**_CORE_NAMES, **_EXTRA_NAMES}
+NODE_CLASS_MAPPINGS = {**_CORE_CLASSES, **_EXTRA_CLASSES, **_NET_CLASSES}
+NODE_DISPLAY_NAME_MAPPINGS = {**_CORE_NAMES, **_EXTRA_NAMES, **_NET_NAMES}
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

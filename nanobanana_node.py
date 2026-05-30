@@ -489,6 +489,7 @@ class NanoBanana_TextGen(AlwaysExecuteMixin):
                     "default": "",
                     "tooltip": "JSON safety settings from Safety Settings node.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -512,10 +513,11 @@ class NanoBanana_TextGen(AlwaysExecuteMixin):
         thinking_budget=0,
         seed=-1,
         safety_settings_json="",
+        network=None,
     ):
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         config = _build_config(
             modalities=["TEXT"],
@@ -588,6 +590,7 @@ class NanoBanana_PromptRefiner(AlwaysExecuteMixin):
                     "step": 0.05,
                     "tooltip": "Controls randomness in refinement.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -606,10 +609,11 @@ class NanoBanana_PromptRefiner(AlwaysExecuteMixin):
         system_instruction="",
         thinking_level="NONE",
         temperature=0.7,
+        network=None,
     ):
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         target_phrase = {
             "image": "an AI Image Generator (think Imagen, Midjourney, SDXL, FLUX)",
@@ -691,6 +695,7 @@ class NanoBanana_MultiTurn(AlwaysExecuteMixin):
                     "step": 0.05,
                     "tooltip": "Controls randomness.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -708,12 +713,13 @@ class NanoBanana_MultiTurn(AlwaysExecuteMixin):
         conversation_history="",
         system_instruction="",
         temperature=0.7,
+        network=None,
     ):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         # Parse existing history
         history = []
@@ -806,6 +812,7 @@ class NanoBanana_StructuredOutput(AlwaysExecuteMixin):
                     "step": 0.05,
                     "tooltip": "Lower temperature recommended for structured output.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -823,10 +830,11 @@ class NanoBanana_StructuredOutput(AlwaysExecuteMixin):
         json_schema,
         system_instruction="",
         temperature=0.3,
+        network=None,
     ):
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         try:
             schema = json.loads(json_schema)
@@ -914,6 +922,7 @@ class NanoBanana_Vision(AlwaysExecuteMixin):
                 "ref_image_2": ("IMAGE", {"tooltip": "Second image to analyze."}),
                 "ref_image_3": ("IMAGE", {"tooltip": "Third image to analyze."}),
                 "ref_image_4": ("IMAGE", {"tooltip": "Fourth image to analyze."}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -935,12 +944,13 @@ class NanoBanana_Vision(AlwaysExecuteMixin):
         ref_image_2=None,
         ref_image_3=None,
         ref_image_4=None,
+        network=None,
     ):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         # Build image parts — PNG for vision tasks where small details matter
         img_parts, img_count = _build_image_parts(
@@ -1045,6 +1055,7 @@ class NanoBanana_ImageGen(AlwaysExecuteMixin):
                     "default": "",
                     "tooltip": "JSON safety settings from Safety Settings node.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -1071,12 +1082,13 @@ class NanoBanana_ImageGen(AlwaysExecuteMixin):
         ref_image_3=None,
         ref_image_4=None,
         safety_settings_json="",
+        network=None,
     ):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         # Build image parts
         ref_parts, ref_count = _build_image_parts(
@@ -1171,6 +1183,7 @@ class NanoBanana_ImageEdit(AlwaysExecuteMixin):
                     "default": "AUTO",
                     "tooltip": "Output image resolution.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -1193,12 +1206,13 @@ class NanoBanana_ImageEdit(AlwaysExecuteMixin):
         system_instruction="",
         aspect_ratio="AUTO",
         image_size="AUTO",
+        network=None,
     ):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         parts = []
 
@@ -1284,6 +1298,7 @@ class NanoBanana_Inpaint(AlwaysExecuteMixin):
                     "default": "",
                     "tooltip": "System instruction for the inpainting model.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -1302,12 +1317,13 @@ class NanoBanana_Inpaint(AlwaysExecuteMixin):
         prompt,
         reference_image=None,
         system_instruction="",
+        network=None,
     ):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         parts = []
 
@@ -1400,6 +1416,7 @@ class NanoBanana_Outpaint(AlwaysExecuteMixin):
                     "default": "AUTO",
                     "tooltip": "Target aspect ratio after outpainting.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -1418,12 +1435,13 @@ class NanoBanana_Outpaint(AlwaysExecuteMixin):
         prompt,
         system_instruction="",
         aspect_ratio="AUTO",
+        network=None,
     ):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         parts = []
 
@@ -1488,6 +1506,7 @@ class NanoBanana_ListModels(AlwaysExecuteMixin):
                     "default": "all",
                     "tooltip": "Filter by capability. 'image_generation' shows only models that can output images.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -1496,9 +1515,9 @@ class NanoBanana_ListModels(AlwaysExecuteMixin):
     FUNCTION = "list_models"
     CATEGORY = "NanoBanana2/Config"
 
-    def list_models(self, api_key, filter="all"):
+    def list_models(self, api_key, filter="all", network=None):
         key = get_api_key(api_key)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         all_models = []
         for m in client.models.list():
@@ -1610,6 +1629,7 @@ class NanoBanana_ImagenGen(AlwaysExecuteMixin):
                     {"default": "allow_adult",
                      "tooltip": "Whether/how to generate people. Some models enforce stricter defaults."}
                 ),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -1630,6 +1650,7 @@ class NanoBanana_ImagenGen(AlwaysExecuteMixin):
         seed=-1,
         safety_filter_level="block_low_and_above",
         person_generation="allow_adult",
+        network=None,
     ):
         from google.genai import types
         import torch
@@ -1637,7 +1658,7 @@ class NanoBanana_ImagenGen(AlwaysExecuteMixin):
 
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         cfg_kwargs = {
             "number_of_images": number_of_images,
@@ -1731,6 +1752,7 @@ class NanoBanana_TTS(AlwaysExecuteMixin):
                 "custom_model": ("STRING", {"default": ""}),
                 "style_prompt": ("STRING", {"multiline": True, "default": "",
                     "tooltip": "Optional style instruction prepended to text (e.g., 'Say cheerfully:')."}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -1739,7 +1761,7 @@ class NanoBanana_TTS(AlwaysExecuteMixin):
     FUNCTION = "generate"
     CATEGORY = "NanoBanana2/Audio"
 
-    def generate(self, api_key, model, text, voice, custom_model="", style_prompt=""):
+    def generate(self, api_key, model, text, voice, custom_model="", style_prompt="", network=None):
         from google.genai import types
         import torch
         import numpy as np
@@ -1756,7 +1778,7 @@ class NanoBanana_TTS(AlwaysExecuteMixin):
 
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         full_text = f"{style_prompt.strip()}\n{text}" if style_prompt.strip() else text
 
@@ -1826,6 +1848,7 @@ class NanoBanana_Embed(AlwaysExecuteMixin):
                                "tooltip": "Optimize the embedding for this downstream task."}),
                 "output_dim": ("INT", {"default": 768, "min": 128, "max": 3072, "step": 128,
                     "tooltip": "Output dimensionality. 768 is default. Larger = more expressive."}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -1835,12 +1858,12 @@ class NanoBanana_Embed(AlwaysExecuteMixin):
     CATEGORY = "NanoBanana2/Embeddings"
 
     def embed(self, api_key, model, text, custom_model="",
-              task_type="SEMANTIC_SIMILARITY", output_dim=768):
+              task_type="SEMANTIC_SIMILARITY", output_dim=768, network=None):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         config = types.EmbedContentConfig(
             task_type=task_type,
@@ -1896,6 +1919,7 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
                 "poll_interval": ("INT", {"default": 10, "min": 2, "max": 60,
                     "tooltip": "Seconds between operation polls. Lower = "
                                "more responsive cancel, higher = less API noise."}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -1907,7 +1931,7 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
     def generate(self, api_key, model, prompt, custom_model="", source_image=None,
                  aspect_ratio="16:9", number_of_videos=1, negative_prompt="",
                  seed=-1, duration_seconds=8, timeout_seconds=600,
-                 poll_interval=10):
+                 poll_interval=10, network=None):
         from google.genai import types
         import time
         import os
@@ -1929,7 +1953,7 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
         key = get_api_key(api_key)
         # Sanitize so a malicious custom_model can't escape /models/ in URL.
         final_model = sanitize_model_id(_resolve_model(model, custom_model))
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         cfg_kwargs = {
             "aspect_ratio": aspect_ratio,
@@ -2147,6 +2171,7 @@ class NanoBanana_CountTokens(AlwaysExecuteMixin):
             },
             "optional": {
                 "custom_model": ("STRING", {"default": ""}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -2155,10 +2180,10 @@ class NanoBanana_CountTokens(AlwaysExecuteMixin):
     FUNCTION = "count"
     CATEGORY = "NanoBanana2/Config"
 
-    def count(self, api_key, model, text, custom_model=""):
+    def count(self, api_key, model, text, custom_model="", network=None):
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         response = client.models.count_tokens(model=final_model, contents=text)
         total = getattr(response, "total_tokens", 0) or 0

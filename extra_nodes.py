@@ -73,6 +73,7 @@ class NanoBanana_FilesUpload(AlwaysExecuteMixin):
                     "default": "",
                     "tooltip": "Override the MIME type if auto-detection fails.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -81,9 +82,9 @@ class NanoBanana_FilesUpload(AlwaysExecuteMixin):
     FUNCTION = "upload"
     CATEGORY = "NanoBanana2/Files"
 
-    def upload(self, api_key, file_path, display_name="", mime_type=""):
+    def upload(self, api_key, file_path, display_name="", mime_type="", network=None):
         key = get_api_key(api_key)
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         if not file_path or not os.path.isfile(file_path):
             raise ValueError(f"File not found: {file_path!r}")
@@ -135,6 +136,7 @@ class NanoBanana_VisionWithFile(AlwaysExecuteMixin):
                 "custom_model": ("STRING", {"default": ""}),
                 "temperature": ("FLOAT", {"default": 0.1, "min": 0.0, "max": 2.0, "step": 0.05}),
                 "thinking_level": (THINKING_LEVELS, {"default": "NONE"}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -144,12 +146,12 @@ class NanoBanana_VisionWithFile(AlwaysExecuteMixin):
     CATEGORY = "NanoBanana2/Files"
 
     def ask(self, api_key, model, file_uri, mime_type, prompt,
-            custom_model="", temperature=0.1, thinking_level="NONE"):
+            custom_model="", temperature=0.1, thinking_level="NONE", network=None):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = custom_model.strip() if custom_model and custom_model.strip() else model
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         if not file_uri.strip():
             raise ValueError("file_uri is empty — upload via NanoBanana Files Upload first.")
@@ -199,6 +201,7 @@ class NanoBanana_TextGenSearch(AlwaysExecuteMixin):
                 "custom_model": ("STRING", {"default": ""}),
                 "system_instruction": ("STRING", {"multiline": True, "default": ""}),
                 "temperature": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 2.0, "step": 0.05}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -208,12 +211,12 @@ class NanoBanana_TextGenSearch(AlwaysExecuteMixin):
     CATEGORY = "NanoBanana2/Text"
 
     def generate(self, api_key, model, prompt, custom_model="",
-                 system_instruction="", temperature=0.3):
+                 system_instruction="", temperature=0.3, network=None):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = custom_model.strip() if custom_model and custom_model.strip() else model
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         cfg_kwargs = {
             "tools": [types.Tool(google_search=types.GoogleSearch())],
@@ -267,6 +270,7 @@ class NanoBanana_TextGenCode(AlwaysExecuteMixin):
             "optional": {
                 "custom_model": ("STRING", {"default": ""}),
                 "temperature": ("FLOAT", {"default": 0.1, "min": 0.0, "max": 2.0, "step": 0.05}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -275,12 +279,12 @@ class NanoBanana_TextGenCode(AlwaysExecuteMixin):
     FUNCTION = "generate"
     CATEGORY = "NanoBanana2/Text"
 
-    def generate(self, api_key, model, prompt, custom_model="", temperature=0.1):
+    def generate(self, api_key, model, prompt, custom_model="", temperature=0.1, network=None):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = custom_model.strip() if custom_model and custom_model.strip() else model
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         # ToolCodeExecution is the correct type name in google-genai 1.x
         # (older name "CodeExecution" was removed).
@@ -342,6 +346,7 @@ class NanoBanana_TTSMultiSpeaker(AlwaysExecuteMixin):
             },
             "optional": {
                 "custom_model": ("STRING", {"default": ""}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -352,14 +357,14 @@ class NanoBanana_TTSMultiSpeaker(AlwaysExecuteMixin):
 
     def generate(self, api_key, model, dialogue,
                  speaker_1_name, speaker_1_voice,
-                 speaker_2_name, speaker_2_voice, custom_model=""):
+                 speaker_2_name, speaker_2_voice, custom_model="", network=None):
         from google.genai import types
         import torch
         import numpy as np
 
         key = get_api_key(api_key)
         final_model = custom_model.strip() if custom_model and custom_model.strip() else model
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         speaker_configs = [
             types.SpeakerVoiceConfig(
@@ -437,6 +442,7 @@ class NanoBanana_AudioTranscribe(AlwaysExecuteMixin):
                     "default": "Transcribe this audio verbatim. Include speaker labels if multiple speakers are present.",
                 }),
                 "include_timestamps": ("BOOLEAN", {"default": False}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -447,12 +453,12 @@ class NanoBanana_AudioTranscribe(AlwaysExecuteMixin):
 
     def transcribe(self, api_key, model, audio, custom_model="",
                    prompt="Transcribe this audio verbatim.",
-                   include_timestamps=False):
+                   include_timestamps=False, network=None):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = custom_model.strip() if custom_model and custom_model.strip() else model
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         wav_bytes = comfy_to_audio_bytes(audio, fmt="wav")
         if include_timestamps:
@@ -577,6 +583,7 @@ class NanoBanana_VisionOCR(AlwaysExecuteMixin):
                     "default": "",
                     "tooltip": "Optional language hint (e.g. 'Japanese', 'Hindi').",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -586,12 +593,12 @@ class NanoBanana_VisionOCR(AlwaysExecuteMixin):
     CATEGORY = "NanoBanana2/Image"
 
     def ocr(self, api_key, model, image, custom_model="",
-            mode="plain_text", language_hint=""):
+            mode="plain_text", language_hint="", network=None):
         from google.genai import types
 
         key = get_api_key(api_key)
         final_model = custom_model.strip() if custom_model and custom_model.strip() else model
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         # Lossless PNG — small text in JPEG-95 loses ~30% character accuracy.
         img_bytes = tensor_to_png_bytes(image)
@@ -689,6 +696,7 @@ class NanoBanana_CostEstimate(AlwaysExecuteMixin):
                     "default": 1, "min": 1, "max": 1_000_000,
                     "tooltip": "Multiplier for batched workflows.",
                 }),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -698,10 +706,10 @@ class NanoBanana_CostEstimate(AlwaysExecuteMixin):
     CATEGORY = "NanoBanana2/Config"
 
     def estimate(self, api_key, model, prompt, custom_model="",
-                 expected_output_tokens=500, runs=1):
+                 expected_output_tokens=500, runs=1, network=None):
         key = get_api_key(api_key)
         final_model = custom_model.strip() if custom_model and custom_model.strip() else model
-        client = get_client(key)
+        client = get_client(key, network=network)
 
         resp = client.models.count_tokens(model=final_model, contents=prompt)
         in_tok = int(getattr(resp, "total_tokens", 0) or 0)

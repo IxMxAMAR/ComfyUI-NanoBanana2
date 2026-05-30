@@ -59,32 +59,93 @@ def redact_secret(text: str) -> str:
 # Bounded client cache (LRU over hashed key)
 # ---------------------------------------------------------------------------
 
-# Hash → Client. lru_cache discards LRU entries past maxsize.
-@functools.lru_cache(maxsize=16)
-def _get_client_for_hash(key_hash: str, timeout_ms: int, _api_key: str):
-    """Internal: create or retrieve the Client for a given key hash.
+# ---------------------------------------------------------------------------
+# Network routing (proxy support)
+# ---------------------------------------------------------------------------
 
-    `_api_key` is passed only so the constructor can use it; it is NOT used
-    as the cache key (key_hash is). It's underscore-prefixed to discourage
-    callers from using it.
+def _network_to_proxy_url(network) -> str:
+    """Extract a single proxy URL from a NanoBanana_NetworkRoute output, or "" if
+    networking should be direct (the default).
+
+    Expected shape:
+        {"enabled": bool, "proxy_url": str, "label": str}
     """
+    if not network:
+        return ""
+    if not isinstance(network, dict):
+        return ""
+    if not network.get("enabled", True):
+        return ""
+    return (network.get("proxy_url") or "").strip()
+
+
+def _build_proxied_client(api_key: str, timeout_ms: int, proxy_url: str):
+    """Build a google.genai Client whose underlying httpx transport routes through
+    the supplied proxy URL. If proxy_url is empty, behave exactly like before."""
     from google import genai
-    return genai.Client(
-        api_key=_api_key, http_options={"timeout": timeout_ms}
-    )
+    http_options = {"timeout": timeout_ms}
+    if proxy_url:
+        # httpx is a transitive dep of google-genai. Build a Client whose
+        # transport tunnels through the user-supplied US (or wherever) proxy.
+        try:
+            import httpx
+            mounts = {"all://": httpx.HTTPTransport(proxy=proxy_url)}
+            http_options["client_args"] = {"mounts": mounts}
+            http_options["async_client_args"] = {"mounts": mounts}
+        except Exception as e:
+            # If httpx mounts plumbing isn't available in this version, fall
+            # back to env vars — google-genai's underlying httpx still respects
+            # HTTPS_PROXY at Client construction time.
+            print(f"[NanoBanana Network] httpx mounts unavailable ({e}); using HTTPS_PROXY env fallback")
+            os.environ["HTTP_PROXY"] = proxy_url
+            os.environ["HTTPS_PROXY"] = proxy_url
+    return genai.Client(api_key=api_key, http_options=http_options)
 
 
-def get_client(api_key, timeout_ms=180000):
+# Hash → Client. lru_cache discards LRU entries past maxsize. We key by
+# (key_hash, timeout_ms, proxy_url) so each routing variant gets its own
+# cached Client instead of fighting over a single global one.
+@functools.lru_cache(maxsize=64)
+def _get_client_for_hash(key_hash: str, timeout_ms: int, proxy_url: str, _api_key: str):
+    """Internal: create or retrieve the Client for a given (key, timeout, proxy)."""
+    return _build_proxied_client(_api_key, timeout_ms, proxy_url)
+
+
+def get_client(api_key, timeout_ms=180000, network=None):
     """Return a cached google.genai Client for the given API key.
 
-    The cache is bounded (16 keys) and indexed by a SHA-256 hash, so:
+    Args:
+      api_key: Google Gemini API key.
+      timeout_ms: HTTP timeout for the underlying httpx client.
+      network: Optional NB_NETWORK config (output of NanoBanana_NetworkRoute).
+        When set with proxy_url, every request from the returned Client tunnels
+        through that proxy — e.g. point it at a US-egress SOCKS5/HTTP proxy to
+        make API calls appear to originate from the US.
+
+    The cache is bounded (64 entries) and indexed by a SHA-256 hash of the key
+    plus the proxy URL, so:
       - rotating keys across many workflows can't OOM the worker
       - the raw key isn't held in a dict key indefinitely
+      - switching between routed/direct calls in the same workflow works
     """
     if not api_key:
         raise ValueError("get_client() called with empty API key")
     key_hash = hashlib.sha256(api_key.encode("utf-8")).hexdigest()
-    return _get_client_for_hash(key_hash, int(timeout_ms), api_key)
+    proxy_url = _network_to_proxy_url(network)
+    return _get_client_for_hash(key_hash, int(timeout_ms), proxy_url, api_key)
+
+
+def proxy_url_from_network(network) -> str:
+    """Public helper for code paths that use raw requests (e.g. Lyria's
+    :predict endpoint) instead of the genai.Client — returns "" for direct."""
+    return _network_to_proxy_url(network)
+
+
+def proxies_for_requests(network) -> dict:
+    """Public helper that returns a `proxies=` dict to pass to `requests.post`/
+    `requests.get`. Returns {} if no proxy is configured (i.e. direct call)."""
+    url = _network_to_proxy_url(network)
+    return {"http": url, "https": url} if url else {}
 
 
 def clear_client_cache():
