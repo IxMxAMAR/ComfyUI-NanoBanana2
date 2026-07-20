@@ -8,7 +8,7 @@ The name still fits, somehow.
 
 Also available as part of [ComfyUI-API-Toolkit](https://github.com/IxMxAMAR/ComfyUI-API-Toolkit) alongside other API integrations.
 
-**v2.1.0** — audit-driven release. Two Gemini Pro code reviews + 64 tests fixed 10 verified bugs, hardened secret handling / URL injection / SSRF / cache memory growth, and added 9 new nodes. See [CHANGELOG.md](CHANGELOG.md).
+**v2.5** — audit release. Two parallel full-codebase reviews + 64 tests fixed 10 verified bugs, hardened secret handling / URL injection / SSRF / cache memory growth, and added 9 new nodes. See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -229,7 +229,7 @@ A few things that were done deliberately:
 ## Tests
 
 ```
-C:/ComfyUI/venv/Scripts/python -m pytest tests/
+python -m pytest tests/
 ```
 
 64 tests, no network. Covers secret redaction, model-ID sanitization,

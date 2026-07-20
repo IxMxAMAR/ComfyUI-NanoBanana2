@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.5.0] — 2026-05-17
 
-Audit-driven release. Two parallel Gemini 3.1 Pro reviews (one focused on
-the API/HTTP/auth/retry layer, one on node correctness/UX) plus first-party
+Audit release. Two parallel full-codebase reviews (one focused on the
+API/HTTP/auth/retry layer, one on node correctness/UX) plus first-party
 verification of every Critical and High finding produced 10 verified bug
 fixes, four security hardenings, nine new feature nodes, and 64 tests.
 
@@ -253,7 +253,7 @@ Version bumped to 2.5.0 to leap above the existing registry sequence
 Run with:
 
 ```
-C:/ComfyUI/venv/Scripts/python -m pytest tests/
+python -m pytest tests/
 ```
 
 ### Deferred to v2.2

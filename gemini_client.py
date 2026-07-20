@@ -1,6 +1,6 @@
 """Google Gemini API client wrapper with caching, retry, and key sanitization.
 
-v2.1 changes (security & robustness pass driven by Gemini Pro audit 2026-05-17):
+v2.1 changes (security & robustness pass, 2026-05-17):
   - Client cache is now LRU-bounded (max 16 keys) and keyed by SHA-256 hash
     of the API key. The raw key never lives in a dict key, only inside the
     Client object. Prevents unbounded memory growth and reduces key
