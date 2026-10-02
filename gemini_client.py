@@ -282,6 +282,35 @@ def sanitize_model_id(model_id: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Interactions API audio helpers (Lyria, Gemini 3.8 TTS)
+# ---------------------------------------------------------------------------
+
+def wav_bytes_to_audio(wav_bytes: bytes) -> dict:
+    """Decode WAV bytes into a ComfyUI AUDIO dict ({"waveform": [1, C, T], "sample_rate"})."""
+    import io
+    import soundfile as sf
+    import torch
+
+    samples, sample_rate = sf.read(io.BytesIO(wav_bytes), dtype="float32", always_2d=True)
+    return {"waveform": torch.from_numpy(samples.T.copy()).unsqueeze(0), "sample_rate": sample_rate}
+
+
+def interactions_audio(client, label: str, timeout=None, wav=True, **request) -> dict:
+    """Run client.interactions.create(**request) and return the generated audio as a
+    ComfyUI AUDIO dict. wav=False omits response_format and takes the model's
+    default encoding (Lyria 3 Clip returns MP3)."""
+    import base64
+
+    if wav:
+        request["response_format"] = {"type": "audio"}
+    interaction = retry_with_backoff(lambda: client.interactions.create(timeout=timeout, **request))
+    audio = getattr(interaction, "output_audio", None)
+    if audio is None or not audio.data:
+        raise RuntimeError(f"{label} returned no audio.")
+    return wav_bytes_to_audio(base64.b64decode(audio.data))
+
+
+# ---------------------------------------------------------------------------
 # Model lists
 # ---------------------------------------------------------------------------
 
@@ -293,34 +322,33 @@ TEXT_MODELS = [
     "gemini-pro-latest",
     "gemini-flash-latest",
     "gemini-flash-lite-latest",
-    # --- Gemini 3 Previews (most capable) ---
-    "gemini-3-pro-preview",
+    # --- Gemini 3 (stable) ---
+    "gemini-3.8-flash",
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    # --- Gemini 3 Previews ---
     "gemini-3-flash-preview",
     "gemini-3.1-pro-preview",
     "gemini-3.1-pro-preview-customtools",
-    "gemini-3.1-flash-lite-preview",
-    # --- Gemini 2.5 (stable) ---
+    # --- Gemini 2.5 (not deprecated, but only served to projects that used it before) ---
     "gemini-2.5-pro",
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
-    # --- Gemini 2.0 ---
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-001",
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-flash-lite-001",
     # --- TTS variants ---
     "gemini-2.5-flash-preview-tts",
     "gemini-2.5-pro-preview-tts",
     "gemini-3.1-flash-tts-preview",
     # --- Specialized ---
-    "gemini-robotics-er-1.5-preview",
-    "gemini-robotics-er-1.6-preview",
-    "gemini-2.5-computer-use-preview-10-2025",
+    "gemini-robotics-er-2-preview",
     "deep-research-pro-preview-12-2025",
     "deep-research-preview-04-2026",
     "deep-research-max-preview-04-2026",
     "nano-banana-pro-preview",
     # --- Lyria (music) ---
+    "lyria-3.5",
     "lyria-3-clip-preview",
     "lyria-3-pro-preview",
     # --- Gemma (open models) ---
@@ -336,12 +364,14 @@ TEXT_MODELS = [
 
 # Image generation via generate_content (native multimodal output)
 IMAGE_MODELS = [
-    "gemini-3.1-flash-image-preview",  # Nano Banana 2
-    "gemini-3-pro-image-preview",      # Nano Banana Pro
-    "gemini-2.5-flash-image",          # Nano Banana
+    "gemini-3.1-flash-image",       # Nano Banana 2
+    "gemini-3.1-flash-lite-image",  # Nano Banana 2 Lite (1K only)
+    "gemini-3-pro-image",           # Nano Banana Pro
+    "gemini-2.5-flash-image",       # Nano Banana (scheduled shutdown 2026-10-02)
 ]
 
-# Imagen uses generate_images (predict) endpoint — different API path
+# Imagen uses generate_images (predict) endpoint — different API path.
+# All Imagen 4 models were scheduled for shutdown on 2026-08-17.
 IMAGEN_MODELS = [
     "imagen-4.0-ultra-generate-001",
     "imagen-4.0-generate-001",
@@ -351,12 +381,19 @@ IMAGEN_MODELS = [
 # Imagen aspect ratios (documented Imagen API set)
 IMAGEN_ASPECT_RATIOS = ["1:1", "3:4", "4:3", "9:16", "16:9"]
 
-# TTS models (use generate_content with audio response modality)
+# TTS models. The 2.5 and 3.1 models use generate_content with an audio
+# response modality; the 3.8 models are served by the Interactions API only.
 TTS_MODELS = [
     "gemini-2.5-flash-preview-tts",
     "gemini-2.5-pro-preview-tts",
     "gemini-3.1-flash-tts-preview",
+    "gemini-3.8-flash-tts",
+    "gemini-3.8-flash-lite-tts",
 ]
+INTERACTIONS_TTS_MODELS = ("gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts")
+
+# Speech-to-text model (generate_content with audio_transcription_config)
+TRANSCRIBE_MODELS = ["gemini-3.5-transcribe"]
 
 # Embedding models
 EMBEDDING_MODELS = [
@@ -379,24 +416,28 @@ NATIVE_AUDIO_MODELS = [
     "gemini-3.1-flash-live-preview",
 ]
 
-# Veo video generation (uses predictLongRunning)
+# Veo video generation (uses predictLongRunning). Veo 3.1 is scheduled for
+# shutdown on 2026-10-22 in favour of Gemini Omni Flash.
 VEO_MODELS = [
     "veo-3.1-generate-preview",
     "veo-3.1-fast-generate-preview",
     "veo-3.1-lite-generate-preview",
-    "veo-3.0-generate-001",
-    "veo-3.0-fast-generate-001",
-    "veo-2.0-generate-001",
 ]
 
-# Lyria music models
+# Gemini Omni video generation/editing (Interactions API)
+OMNI_MODELS = ["gemini-omni-1.1-flash"]
+OMNI_RESOLUTIONS = ["720p", "360p", "1080p", "4k"]
+
+# Lyria music models (Interactions API)
 LYRIA_MODELS = [
+    "lyria-3.5",
     "lyria-3-pro-preview",
     "lyria-3-clip-preview",
 ]
 
 # Veo supports these aspect ratios
 VEO_ASPECT_RATIOS = ["16:9", "9:16"]
+VEO_RESOLUTIONS = ["AUTO", "720p", "1080p", "4k"]
 
 # Pre-built voices for Gemini TTS
 TTS_VOICES = [
@@ -408,11 +449,13 @@ TTS_VOICES = [
     "Zubenelgenubi", "Vindemiatrix", "Sadachbia", "Sadaltager", "Sulafat",
 ]
 
-ALL_MODELS = TEXT_MODELS + IMAGE_MODELS + IMAGEN_MODELS + TTS_MODELS + EMBEDDING_MODELS + VEO_MODELS + LYRIA_MODELS
+ALL_MODELS = (TEXT_MODELS + IMAGE_MODELS + IMAGEN_MODELS + TTS_MODELS + EMBEDDING_MODELS
+              + VEO_MODELS + LYRIA_MODELS + OMNI_MODELS + TRANSCRIBE_MODELS)
 
 ASPECT_RATIOS = [
     "AUTO", "1:1", "2:3", "3:2", "3:4", "4:3",
     "4:5", "5:4", "9:16", "16:9", "21:9",
+    "1:4", "4:1", "1:8", "8:1",
 ]
 
 # THINKING_LEVELS: the google-genai SDK enum is
@@ -422,7 +465,7 @@ ASPECT_RATIOS = [
 # replaces NORMAL with the actual SDK values MINIMAL/MEDIUM.
 THINKING_LEVELS = ["NONE", "MINIMAL", "LOW", "MEDIUM", "HIGH"]
 
-IMAGE_SIZES = ["AUTO", "1K", "2K", "4K"]
+IMAGE_SIZES = ["AUTO", "1K", "2K", "4K", "512"]
 
 # Safety filter levels accepted by the Imagen `predict` endpoint.
 # Developer API typically only honors block_low_and_above on free tier, but

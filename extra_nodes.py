@@ -12,6 +12,7 @@ node fills a real gap in the v2.0 coverage:
  - NanoBanana_EmbedSave        — save embedding vector as .npy
  - NanoBanana_VisionOCR        — preset Vision node tuned for OCR / fine text
  - NanoBanana_CostEstimate     — token-based cost estimate for prompts/images
+ - NanoBanana_TextGenURL       — TextGen + URL Context tool (Interactions API)
 """
 
 import json
@@ -26,9 +27,9 @@ try:
         tensor_to_jpeg_bytes, tensor_to_png_bytes, comfy_to_audio_bytes,
     )
     from .gemini_client import (
-        get_client, get_api_key, retry_with_backoff,
+        get_client, get_api_key, retry_with_backoff, interactions_audio,
         TEXT_MODELS, TTS_MODELS, TTS_VOICES, EMBEDDING_MODELS,
-        THINKING_LEVELS,
+        THINKING_LEVELS, INTERACTIONS_TTS_MODELS, TRANSCRIBE_MODELS,
     )
 except ImportError:
     from shared.node_utils import AlwaysExecuteMixin
@@ -36,9 +37,9 @@ except ImportError:
         tensor_to_jpeg_bytes, tensor_to_png_bytes, comfy_to_audio_bytes,
     )
     from gemini_client import (
-        get_client, get_api_key, retry_with_backoff,
+        get_client, get_api_key, retry_with_backoff, interactions_audio,
         TEXT_MODELS, TTS_MODELS, TTS_VOICES, EMBEDDING_MODELS,
-        THINKING_LEVELS,
+        THINKING_LEVELS, INTERACTIONS_TTS_MODELS, TRANSCRIBE_MODELS,
     )
 
 
@@ -194,7 +195,7 @@ class NanoBanana_TextGenSearch(AlwaysExecuteMixin):
         return {
             "required": {
                 "api_key": ("STRING", {"default": "", "password": True}),
-                "model": (TEXT_MODELS, {"default": "gemini-2.5-flash"}),
+                "model": (TEXT_MODELS, {"default": "gemini-3.8-flash"}),
                 "prompt": ("STRING", {"multiline": True, "default": ""}),
             },
             "optional": {
@@ -264,7 +265,7 @@ class NanoBanana_TextGenCode(AlwaysExecuteMixin):
         return {
             "required": {
                 "api_key": ("STRING", {"default": "", "password": True}),
-                "model": (TEXT_MODELS, {"default": "gemini-2.5-pro"}),
+                "model": (TEXT_MODELS, {"default": "gemini-3.8-flash"}),
                 "prompt": ("STRING", {"multiline": True, "default": ""}),
             },
             "optional": {
@@ -315,9 +316,81 @@ class NanoBanana_TextGenCode(AlwaysExecuteMixin):
         return (text, "\n---\n".join(codes), "\n---\n".join(results))
 
 
+class NanoBanana_TextGenURL(AlwaysExecuteMixin):
+    """TextGen with the URL Context tool: the model reads the web pages linked in the prompt.
+
+    Put up to 20 URLs in the prompt and ask about them (summarize, compare,
+    extract). Paywalled pages, YouTube, Google Workspace files and
+    audio/video files are not supported. Optionally add Google Search so the
+    model can find pages on its own. Uses the Interactions API.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "api_key": ("STRING", {"default": "", "password": True}),
+                "model": (TEXT_MODELS, {"default": "gemini-3.8-flash"}),
+                "prompt": ("STRING", {"multiline": True, "default": "",
+                    "tooltip": "Prompt containing the URLs to read."}),
+            },
+            "optional": {
+                "custom_model": ("STRING", {"default": ""}),
+                "system_instruction": ("STRING", {"multiline": True, "default": ""}),
+                "google_search": ("BOOLEAN", {"default": False,
+                    "tooltip": "Also enable Google Search grounding."}),
+                            "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("text",)
+    FUNCTION = "generate"
+    CATEGORY = "NanoBanana2/Text"
+
+    def generate(self, api_key, model, prompt, custom_model="",
+                 system_instruction="", google_search=False, network=None):
+        key = get_api_key(api_key)
+        final_model = custom_model.strip() if custom_model and custom_model.strip() else model
+        client = get_client(key, network=network)
+
+        request = {
+            "model": final_model,
+            "input": prompt,
+            "tools": [{"type": "url_context"}] + ([{"type": "google_search"}] if google_search else []),
+        }
+        if system_instruction.strip():
+            request["system_instruction"] = system_instruction.strip()
+
+        interaction = retry_with_backoff(lambda: client.interactions.create(**request))
+        return ((interaction.output_text or "").strip(),)
+
+
 # ===================================================================
 # Multi-Speaker TTS — v2.0 only supported single voice
 # ===================================================================
+
+def _dialogue_turns(dialogue, speakers):
+    """Split 'Name: line' dialogue into Interactions text turns tagged with their speaker."""
+    turns = []
+    for line in dialogue.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        for entry in speakers:
+            prefix = entry["speaker"] + ":"
+            if line.startswith(prefix):
+                turns.append({
+                    "type": "text", "text": line[len(prefix):].strip(),
+                    "annotations": [{"type": "speech_metadata", "speaker": entry["speaker"]}],
+                })
+                break
+        else:
+            if not turns:
+                raise ValueError("Dialogue must start with a 'Speaker:' line using one of the speaker names.")
+            turns[-1]["text"] += "\n" + line
+    return turns
+
 
 class NanoBanana_TTSMultiSpeaker(AlwaysExecuteMixin):
     """Multi-speaker TTS using MultiSpeakerVoiceConfig (v2.0 was single-voice only).
@@ -325,7 +398,8 @@ class NanoBanana_TTSMultiSpeaker(AlwaysExecuteMixin):
     Pass dialogue with speaker tags like:
         Alice: Hi Bob, how are you?
         Bob: I'm great, thanks!
-    and supply Alice/Bob voice names. Up to 2 speakers per request.
+    and supply Alice/Bob voice names. Up to 2 speakers per request. Gemini 3.8
+    TTS models take the dialogue as one turn per speaker line.
     """
 
     @classmethod
@@ -365,6 +439,17 @@ class NanoBanana_TTSMultiSpeaker(AlwaysExecuteMixin):
         key = get_api_key(api_key)
         final_model = custom_model.strip() if custom_model and custom_model.strip() else model
         client = get_client(key, network=network)
+
+        if final_model in INTERACTIONS_TTS_MODELS:
+            speakers = [
+                {"speaker": speaker_1_name, "voice": speaker_1_voice},
+                {"speaker": speaker_2_name, "voice": speaker_2_voice},
+            ]
+            return (interactions_audio(
+                client, "Multi-speaker TTS", model=final_model,
+                input=[{"type": "user_input", "content": _dialogue_turns(dialogue, speakers)}],
+                generation_config={"speech_config": {"speakers": speakers}},
+            ),)
 
         speaker_configs = [
             types.SpeakerVoiceConfig(
@@ -425,6 +510,10 @@ class NanoBanana_AudioTranscribe(AlwaysExecuteMixin):
     Accepts ComfyUI AUDIO (waveform + sample_rate), encodes as WAV,
     sends to Gemini with a transcription prompt. Returns the transcript
     text. For long audio, upload via FilesUpload + VisionWithFile instead.
+
+    gemini-3.5-transcribe is a dedicated speech-to-text model: it takes only
+    audio (no prompt) and is configured through the language, vocabulary,
+    diarization and mode inputs.
     """
 
     @classmethod
@@ -432,7 +521,7 @@ class NanoBanana_AudioTranscribe(AlwaysExecuteMixin):
         return {
             "required": {
                 "api_key": ("STRING", {"default": "", "password": True}),
-                "model": (TEXT_MODELS, {"default": "gemini-2.5-flash"}),
+                "model": (TEXT_MODELS + TRANSCRIBE_MODELS, {"default": "gemini-3.8-flash"}),
                 "audio": ("AUDIO",),
             },
             "optional": {
@@ -441,8 +530,17 @@ class NanoBanana_AudioTranscribe(AlwaysExecuteMixin):
                     "multiline": True,
                     "default": "Transcribe this audio verbatim. Include speaker labels if multiple speakers are present.",
                 }),
-                "include_timestamps": ("BOOLEAN", {"default": False}),
+                "include_timestamps": ("BOOLEAN", {"default": False,
+                    "tooltip": "Not used by gemini-3.5-transcribe."}),
                             "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
+                "language_codes": ("STRING", {"default": "",
+                    "tooltip": "gemini-3.5-transcribe only. Comma-separated BCP-47 codes (e.g. en-US,es-ES). Empty = auto-detect."}),
+                "custom_vocabulary": ("STRING", {"default": "",
+                    "tooltip": "gemini-3.5-transcribe only. Comma-separated terms to bias recognition (up to 1000). Cannot be combined with diarization."}),
+                "diarization": ("BOOLEAN", {"default": False,
+                    "tooltip": "gemini-3.5-transcribe only. Label up to 8 distinct speakers."}),
+                "transcription_mode": (["VERBATIM", "SMART"], {"default": "VERBATIM",
+                    "tooltip": "gemini-3.5-transcribe only. SMART removes disfluencies; it cannot be combined with diarization."}),
             },
         }
 
@@ -453,7 +551,9 @@ class NanoBanana_AudioTranscribe(AlwaysExecuteMixin):
 
     def transcribe(self, api_key, model, audio, custom_model="",
                    prompt="Transcribe this audio verbatim.",
-                   include_timestamps=False, network=None):
+                   include_timestamps=False, network=None, language_codes="",
+                   custom_vocabulary="", diarization=False,
+                   transcription_mode="VERBATIM"):
         from google.genai import types
 
         key = get_api_key(api_key)
@@ -461,6 +561,26 @@ class NanoBanana_AudioTranscribe(AlwaysExecuteMixin):
         client = get_client(key, network=network)
 
         wav_bytes = comfy_to_audio_bytes(audio, fmt="wav")
+
+        if final_model in TRANSCRIBE_MODELS:
+            transcription = {"diarization": diarization, "mode": transcription_mode}
+            for field, value in (("language_codes", language_codes), ("custom_vocabulary", custom_vocabulary)):
+                terms = [t.strip() for t in value.split(",") if t.strip()]
+                if terms:
+                    transcription[field] = terms
+
+            def _transcribe():
+                r = client.models.generate_content(
+                    model=final_model,
+                    contents=[types.Part.from_bytes(data=wav_bytes, mime_type="audio/wav")],
+                    config=types.GenerateContentConfig(
+                        audio_transcription_config=types.AudioTranscriptionConfig(**transcription),
+                    ),
+                )
+                return r.text.strip() if r.text else ""
+
+            return (retry_with_backoff(_transcribe),)
+
         if include_timestamps:
             prompt = (
                 "Transcribe this audio with timestamps in [HH:MM:SS] format at "
@@ -569,7 +689,7 @@ class NanoBanana_VisionOCR(AlwaysExecuteMixin):
         return {
             "required": {
                 "api_key": ("STRING", {"default": "", "password": True}),
-                "model": (TEXT_MODELS, {"default": "gemini-2.5-pro"}),
+                "model": (TEXT_MODELS, {"default": "gemini-3.8-flash"}),
                 "image": ("IMAGE",),
             },
             "optional": {
@@ -584,6 +704,10 @@ class NanoBanana_VisionOCR(AlwaysExecuteMixin):
                     "tooltip": "Optional language hint (e.g. 'Japanese', 'Hindi').",
                 }),
                             "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
+                "media_resolution": (["AUTO", "LOW", "MEDIUM", "HIGH"], {
+                    "default": "AUTO",
+                    "tooltip": "Tokens spent per input image. HIGH reads fine detail and small text; LOW is cheaper. AUTO uses the model default.",
+                }),
             },
         }
 
@@ -593,7 +717,8 @@ class NanoBanana_VisionOCR(AlwaysExecuteMixin):
     CATEGORY = "NanoBanana2/Image"
 
     def ocr(self, api_key, model, image, custom_model="",
-            mode="plain_text", language_hint="", network=None):
+            mode="plain_text", language_hint="", network=None,
+            media_resolution="AUTO"):
         from google.genai import types
 
         key = get_api_key(api_key)
@@ -638,6 +763,8 @@ class NanoBanana_VisionOCR(AlwaysExecuteMixin):
         }
         if mode == "structured_json":
             cfg_kwargs["response_mime_type"] = "application/json"
+        if media_resolution != "AUTO":
+            cfg_kwargs["media_resolution"] = f"MEDIA_RESOLUTION_{media_resolution}"
 
         config = types.GenerateContentConfig(**cfg_kwargs)
 
@@ -655,18 +782,22 @@ class NanoBanana_VisionOCR(AlwaysExecuteMixin):
 # ===================================================================
 
 # Per-model price hints. Numbers are USD-per-1M-tokens (Google AI pricing
-# page, snapshot 2026-05-17). Adjust as needed — this is a rough estimator.
+# page, standard tier, snapshot 2026-10-02; Gemini 3.6-3.8 Flash show their
+# introductory rates, valid through 2026-12-31). Adjust as needed — this is
+# a rough estimator.
 _PRICE_PER_MTOK = {
     # (input, output)
+    "gemini-3.8-flash":        (0.75, 3.75),
+    "gemini-3.7-flash":        (0.75, 3.75),
+    "gemini-3.6-flash":        (0.75, 3.75),
+    "gemini-3.5-flash":        (1.50, 9.00),
+    "gemini-3.5-flash-lite":   (0.30, 2.50),
+    "gemini-3.1-flash-lite":   (0.25, 1.50),
+    "gemini-3.1-pro-preview":  (2.00, 12.00),
+    "gemini-3-flash-preview":  (0.50, 3.00),
     "gemini-2.5-flash":        (0.30, 2.50),
     "gemini-2.5-flash-lite":   (0.10, 0.40),
     "gemini-2.5-pro":          (1.25, 10.00),
-    "gemini-3.1-pro-preview":  (1.25, 10.00),
-    "gemini-3-pro-preview":    (1.25, 10.00),
-    "gemini-3.1-flash-lite-preview": (0.10, 0.40),
-    "gemini-pro-latest":       (1.25, 10.00),
-    "gemini-flash-latest":     (0.30, 2.50),
-    "gemini-flash-lite-latest": (0.10, 0.40),
 }
 
 
@@ -683,7 +814,7 @@ class NanoBanana_CostEstimate(AlwaysExecuteMixin):
         return {
             "required": {
                 "api_key": ("STRING", {"default": "", "password": True}),
-                "model": (TEXT_MODELS, {"default": "gemini-2.5-flash"}),
+                "model": (TEXT_MODELS, {"default": "gemini-3.8-flash"}),
                 "prompt": ("STRING", {"multiline": True, "default": ""}),
             },
             "optional": {
@@ -750,6 +881,7 @@ NEW_NODE_CLASS_MAPPINGS = {
     "NanoBanana_VisionWithFile":  NanoBanana_VisionWithFile,
     "NanoBanana_TextGenSearch":   NanoBanana_TextGenSearch,
     "NanoBanana_TextGenCode":     NanoBanana_TextGenCode,
+    "NanoBanana_TextGenURL":      NanoBanana_TextGenURL,
     "NanoBanana_TTSMultiSpeaker": NanoBanana_TTSMultiSpeaker,
     "NanoBanana_AudioTranscribe": NanoBanana_AudioTranscribe,
     "NanoBanana_EmbedSave":       NanoBanana_EmbedSave,
@@ -762,6 +894,7 @@ NEW_NODE_DISPLAY_NAME_MAPPINGS = {
     "NanoBanana_VisionWithFile":  "NanoBanana - Ask Uploaded File (PDF / video / audio)",
     "NanoBanana_TextGenSearch":   "NanoBanana - Text Gen + Google Search",
     "NanoBanana_TextGenCode":     "NanoBanana - Text Gen + Code Execution",
+    "NanoBanana_TextGenURL":      "NanoBanana - Text Gen + URL Context",
     "NanoBanana_TTSMultiSpeaker": "NanoBanana - TTS Multi-Speaker Dialogue",
     "NanoBanana_AudioTranscribe": "NanoBanana - Audio Transcribe",
     "NanoBanana_EmbedSave":       "NanoBanana - Save Embedding (.npy)",

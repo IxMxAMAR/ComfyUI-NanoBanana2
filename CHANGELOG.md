@@ -5,6 +5,88 @@ All notable changes to ComfyUI-NanoBanana2 are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] — 2026-10-02
+
+Catches the pack up with the current Gemini API: new model generations, the
+Interactions API endpoints Google now serves music, Gemini 3.8 speech and
+Omni video from, and models Google has shut down.
+
+Requires `google-genai >= 2.3.0` (the first release with the `output_text`,
+`output_audio` and `output_video` helpers on Interactions API responses).
+
+### Added
+
+- **`NanoBanana_OmniVideoGen`** (Video Generation, Gemini Omni) —
+  `gemini-omni-1.1-flash` text-to-video, image-to-video, first/last-frame
+  and subject-reference video with native audio. Aspect ratio, 360p to 4k
+  resolution, base64 or Files API (`uri`) delivery. Pass a Files API video
+  URI to edit or extend a video, or wire the `interaction_id` output into
+  `previous_interaction_id` for conversational edits.
+- **`NanoBanana_TextGenURL`** (Text Gen + URL Context) — the model reads the
+  web pages linked in the prompt (up to 20 URLs), with optional Google Search.
+- **Models:** `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`,
+  `gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`,
+  `gemini-3.1-flash-lite-image` (Nano Banana 2 Lite), `gemini-3.8-flash-tts`,
+  `gemini-3.8-flash-lite-tts`, `lyria-3.5`, `gemini-3.5-transcribe`,
+  `gemini-robotics-er-2-preview`. Model Selector gains `omni` and
+  `transcribe` categories.
+- **Text-to-Speech:** Gemini 3.8 TTS runs on the Interactions API.
+  `style_prompt` is sent as a speech style (the 3.8 models read the text
+  verbatim), and the new `custom_voice` input takes extended-library voice
+  names and `voice_...` / `voicekey_...` IDs from voice design and
+  replication. TTS Multi-Speaker Dialogue sends one turn per speaker line.
+- **Audio Transcribe:** `gemini-3.5-transcribe` with `language_codes`,
+  `custom_vocabulary`, `diarization` and `transcription_mode` (VERBATIM /
+  SMART) inputs.
+- **Music Generation:** optional `image` input (up to 10 reference images)
+  and `network` input.
+- **Image Generation:** `512` image size, aspect ratios `1:4`, `4:1`, `1:8`,
+  `8:1`, and a `search_grounding` input (web, or web + image search).
+- **Vision Analysis / Vision OCR:** `media_resolution` input (LOW, MEDIUM,
+  HIGH) controlling tokens per input image.
+- **Video Generation (Veo):** `resolution` (720p, 1080p, 4k) and `last_frame`
+  inputs.
+- **Network Route** is now listed in the README.
+
+### Changed
+
+- **Lyria music generation** now uses the Interactions API. Lyria 3.5 is
+  asked for WAV (Lyria 3 Clip returns MP3), reference images are accepted,
+  and it routes through Network Route. Lyria has no seed or sample-count
+  parameter, so `seed` and `sample_count` are unused; `negative_prompt` is
+  appended to the prompt as `Avoid: ...`.
+- **Defaults moved off shut-down models:** Image Generation, Image Edit,
+  Inpaint and Outpaint default to `gemini-3.1-flash-image`; Vision Analysis
+  to `gemini-3.1-flash-lite`; Video Generation to `veo-3.1-fast-generate-preview`.
+- **Text node defaults:** Text Generation, Prompt Refiner, Multi-Turn Chat,
+  Structured Output, Count Tokens, Text Gen + Search, Text Gen + Code,
+  Audio Transcribe, Vision OCR and Cost Estimator default to `gemini-3.8-flash`.
+  Google now serves Gemini 2.5 only to projects that already used it.
+- **Thinking:** `thinking_level` and `thinking_budget` are no longer sent
+  together (Gemini 3 rejects the combination). The level wins; the budget
+  now applies on its own when the level is NONE.
+- **Text Embeddings:** `gemini-embedding-2` models no longer receive
+  `task_type`, which they do not support.
+- **Cost Estimator** price table updated to current standard-tier prices and
+  covers the Gemini 3.x models; entries for retired models and aliases were
+  removed.
+- Tooltips note that temperature, top_p and top_k are deprecated on Gemini 3.x
+  models.
+- Imagen Image Generation notes the 2026-08-17 Imagen 4 shutdown, Video
+  Generation (Veo) notes the 2026-10-22 Veo 3.1 shutdown, and
+  `gemini-2.5-flash-image` is marked as scheduled for shutdown on 2026-10-02.
+
+### Removed
+
+- Model IDs Google has shut down: `gemini-3.1-flash-image-preview`,
+  `gemini-3-pro-image-preview`, `gemini-3-pro-preview`,
+  `gemini-3.1-flash-lite-preview`, `gemini-2.0-flash`, `gemini-2.0-flash-001`,
+  `gemini-2.0-flash-lite`, `gemini-2.0-flash-lite-001`,
+  `gemini-robotics-er-1.5-preview`, `gemini-robotics-er-1.6-preview`,
+  `gemini-2.5-computer-use-preview-10-2025`, `veo-3.0-generate-001`,
+  `veo-3.0-fast-generate-001`, `veo-2.0-generate-001`. The `custom_model`
+  field still accepts any ID.
+
 ## [2.5.0] — 2026-05-17
 
 Audit release. Two parallel full-codebase reviews (one focused on the

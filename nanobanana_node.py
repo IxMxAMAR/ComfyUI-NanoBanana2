@@ -3,8 +3,10 @@
 v2.1 — 19 original nodes + 8 new feature nodes (see extra_nodes.py).
 """
 
+import base64
 import json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +24,11 @@ try:
     )
     from .gemini_client import (
         get_client, get_api_key, retry_with_backoff,
-        redact_secret, sanitize_model_id,
+        redact_secret, sanitize_model_id, interactions_audio,
         TEXT_MODELS, IMAGE_MODELS, IMAGEN_MODELS, IMAGEN_ASPECT_RATIOS,
         IMAGEN_SAFETY_LEVELS, TTS_MODELS, TTS_VOICES, EMBEDDING_MODELS,
-        VEO_MODELS, VEO_ASPECT_RATIOS, LYRIA_MODELS, ALL_MODELS,
+        VEO_MODELS, VEO_ASPECT_RATIOS, VEO_RESOLUTIONS, LYRIA_MODELS,
+        OMNI_MODELS, OMNI_RESOLUTIONS, INTERACTIONS_TTS_MODELS, TRANSCRIBE_MODELS, ALL_MODELS,
         ASPECT_RATIOS, THINKING_LEVELS, IMAGE_SIZES,
     )
 except ImportError:
@@ -39,10 +42,11 @@ except ImportError:
     )
     from gemini_client import (
         get_client, get_api_key, retry_with_backoff,
-        redact_secret, sanitize_model_id,
+        redact_secret, sanitize_model_id, interactions_audio,
         TEXT_MODELS, IMAGE_MODELS, IMAGEN_MODELS, IMAGEN_ASPECT_RATIOS,
         IMAGEN_SAFETY_LEVELS, TTS_MODELS, TTS_VOICES, EMBEDDING_MODELS,
-        VEO_MODELS, VEO_ASPECT_RATIOS, LYRIA_MODELS, ALL_MODELS,
+        VEO_MODELS, VEO_ASPECT_RATIOS, VEO_RESOLUTIONS, LYRIA_MODELS,
+        OMNI_MODELS, OMNI_RESOLUTIONS, INTERACTIONS_TTS_MODELS, TRANSCRIBE_MODELS, ALL_MODELS,
         ASPECT_RATIOS, THINKING_LEVELS, IMAGE_SIZES,
     )
 
@@ -55,6 +59,17 @@ def _resolve_model(model, custom_model):
     """Return custom_model if non-empty, else model."""
     cm = custom_model.strip() if custom_model else ""
     return cm if cm else model
+
+
+def _output_dir():
+    """ComfyUI's output directory (cwd/output when running outside ComfyUI)."""
+    try:
+        import folder_paths
+        path = folder_paths.get_output_directory()
+    except ImportError:
+        path = os.path.join(os.getcwd(), "output")
+    os.makedirs(path, exist_ok=True)
+    return path
 
 
 def _build_image_parts(ref_images, labels=True, lossless=False):
@@ -119,6 +134,8 @@ def _build_config(
     safety_settings_json=None,
     response_schema=None,
     response_mime_type=None,
+    media_resolution=None,
+    search_grounding="off",
 ):
     """Build a GenerateContentConfig from keyword arguments."""
     from google.genai import types
@@ -131,12 +148,12 @@ def _build_config(
             types.Part.from_text(text=system_instruction.strip())
         ]
 
-    # Thinking
+    # Thinking — Gemini 3 rejects thinking_level and thinking_budget in the
+    # same request, so the level wins and the budget applies on its own.
     if thinking_level and thinking_level != "NONE":
-        tc_kwargs = {"thinking_level": thinking_level}
-        if thinking_budget and thinking_budget > 0:
-            tc_kwargs["thinking_budget"] = thinking_budget
-        kwargs["thinking_config"] = types.ThinkingConfig(**tc_kwargs)
+        kwargs["thinking_config"] = types.ThinkingConfig(thinking_level=thinking_level)
+    elif thinking_budget and thinking_budget > 0:
+        kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=thinking_budget)
 
     # Image config
     img_kwargs = {}
@@ -164,6 +181,18 @@ def _build_config(
     # Response modalities
     if modalities:
         kwargs["response_modalities"] = modalities
+
+    if media_resolution and media_resolution != "AUTO":
+        kwargs["media_resolution"] = f"MEDIA_RESOLUTION_{media_resolution}"
+
+    if search_grounding == "web":
+        kwargs["tools"] = [types.Tool(google_search=types.GoogleSearch())]
+    elif search_grounding == "web + image":
+        kwargs["tools"] = [types.Tool(google_search=types.GoogleSearch(
+            search_types=types.SearchTypes(
+                web_search=types.WebSearch(), image_search=types.ImageSearch(),
+            )
+        ))]
 
     # Safety settings — raise on invalid JSON so the user notices their filters
     # were never applied (previously this silently warned and continued, which
@@ -276,9 +305,9 @@ class NanoBanana_ModelSelector:
             "required": {
                 "model": (ALL_MODELS, {
                     "default": ALL_MODELS[0],
-                    "tooltip": "Select any Gemini/Imagen/Veo/Lyria/Embedding model.",
+                    "tooltip": "Select any Gemini/Imagen/Veo/Omni/Lyria/Embedding/Transcribe model.",
                 }),
-                "category_validate": (["any", "text", "image_gen", "imagen", "tts", "veo", "lyria", "embedding"], {
+                "category_validate": (["any", "text", "image_gen", "imagen", "tts", "veo", "lyria", "embedding", "omni", "transcribe"], {
                     "default": "any",
                     "tooltip": "Validate that the selected model matches this category. Raises an error at runtime if not. Helps catch mistakes like 'imagen-...' selected for a text node.",
                 }),
@@ -309,6 +338,8 @@ class NanoBanana_ModelSelector:
                 "veo": VEO_MODELS,
                 "lyria": LYRIA_MODELS,
                 "embedding": EMBEDDING_MODELS,
+                "omni": OMNI_MODELS,
+                "transcribe": TRANSCRIBE_MODELS,
             }
             allowed = category_lists.get(category_validate, [])
             if final not in allowed:
@@ -374,7 +405,7 @@ class NanoBanana_SafetySettings:
 
 
 class NanoBanana_ThinkingConfig:
-    """Configure thinking level and optional budget. Outputs JSON string."""
+    """Configure thinking level or budget. Outputs JSON string."""
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -382,7 +413,8 @@ class NanoBanana_ThinkingConfig:
             "required": {
                 "thinking_level": (THINKING_LEVELS, {
                     "default": "NONE",
-                    "tooltip": "How much the model should 'think' before answering.",
+                    "tooltip": "How much the model should 'think' before answering. "
+                               "MINIMAL is not supported by Gemini 3.8 Flash.",
                 }),
             },
             "optional": {
@@ -390,7 +422,8 @@ class NanoBanana_ThinkingConfig:
                     "default": 0,
                     "min": 0,
                     "max": 100000,
-                    "tooltip": "Max thinking tokens (0 = model default).",
+                    "tooltip": "Max thinking tokens (0 = model default). Only used when "
+                               "thinking_level is NONE; Gemini 3 rejects both in one request.",
                 }),
             },
         }
@@ -424,7 +457,7 @@ class NanoBanana_TextGen(AlwaysExecuteMixin):
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var.",
                 }),
                 "model": (TEXT_MODELS, {
-                    "default": "gemini-2.5-flash",
+                    "default": "gemini-3.8-flash",
                     "tooltip": "NanoBanana - model for text generation.",
                 }),
                 "custom_model": ("STRING", {
@@ -448,20 +481,20 @@ class NanoBanana_TextGen(AlwaysExecuteMixin):
                     "min": 0.0,
                     "max": 2.0,
                     "step": 0.05,
-                    "tooltip": "Controls randomness. Lower = more deterministic.",
+                    "tooltip": "Controls randomness. Lower = more deterministic. Deprecated by Google on Gemini 3.x models.",
                 }),
                 "top_p": ("FLOAT", {
                     "default": 0.95,
                     "min": 0.0,
                     "max": 1.0,
                     "step": 0.05,
-                    "tooltip": "Nucleus sampling probability cutoff.",
+                    "tooltip": "Nucleus sampling probability cutoff. Deprecated by Google on Gemini 3.x models.",
                 }),
                 "top_k": ("INT", {
                     "default": 0,
                     "min": 0,
                     "max": 1000,
-                    "tooltip": "Top-K sampling (0 = disabled).",
+                    "tooltip": "Top-K sampling (0 = disabled). Deprecated by Google on Gemini 3.x models.",
                 }),
                 "max_output_tokens": ("INT", {
                     "default": 0,
@@ -477,7 +510,8 @@ class NanoBanana_TextGen(AlwaysExecuteMixin):
                     "default": 0,
                     "min": 0,
                     "max": 100000,
-                    "tooltip": "Max thinking tokens (0 = model default).",
+                    "tooltip": "Max thinking tokens (0 = model default). Only used when "
+                               "thinking_level is NONE; Gemini 3 rejects both in one request.",
                 }),
                 "seed": ("INT", {
                     "default": -1,
@@ -554,7 +588,7 @@ class NanoBanana_PromptRefiner(AlwaysExecuteMixin):
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var.",
                 }),
                 "model": (TEXT_MODELS, {
-                    "default": "gemini-2.5-pro",
+                    "default": "gemini-3.8-flash",
                     "tooltip": "NanoBanana - model for prompt refinement.",
                 }),
                 "custom_model": ("STRING", {
@@ -664,7 +698,7 @@ class NanoBanana_MultiTurn(AlwaysExecuteMixin):
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var.",
                 }),
                 "model": (TEXT_MODELS, {
-                    "default": "gemini-2.5-flash",
+                    "default": "gemini-3.8-flash",
                     "tooltip": "NanoBanana - model for chat.",
                 }),
                 "custom_model": ("STRING", {
@@ -781,7 +815,7 @@ class NanoBanana_StructuredOutput(AlwaysExecuteMixin):
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var.",
                 }),
                 "model": (TEXT_MODELS, {
-                    "default": "gemini-2.5-flash",
+                    "default": "gemini-3.8-flash",
                     "tooltip": "NanoBanana - model for structured output.",
                 }),
                 "custom_model": ("STRING", {
@@ -885,7 +919,7 @@ class NanoBanana_Vision(AlwaysExecuteMixin):
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var.",
                 }),
                 "model": (TEXT_MODELS, {
-                    "default": "gemini-3.1-flash-lite-preview",
+                    "default": "gemini-3.1-flash-lite",
                     "tooltip": "NanoBanana - model for vision analysis.",
                 }),
                 "custom_model": ("STRING", {
@@ -923,6 +957,10 @@ class NanoBanana_Vision(AlwaysExecuteMixin):
                 "ref_image_3": ("IMAGE", {"tooltip": "Third image to analyze."}),
                 "ref_image_4": ("IMAGE", {"tooltip": "Fourth image to analyze."}),
                             "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
+                "media_resolution": (["AUTO", "LOW", "MEDIUM", "HIGH"], {
+                    "default": "AUTO",
+                    "tooltip": "Tokens spent per input image. HIGH reads fine detail and small text; LOW is cheaper. AUTO uses the model default.",
+                }),
             },
         }
 
@@ -945,6 +983,7 @@ class NanoBanana_Vision(AlwaysExecuteMixin):
         ref_image_3=None,
         ref_image_4=None,
         network=None,
+        media_resolution="AUTO",
     ):
         from google.genai import types
 
@@ -967,6 +1006,7 @@ class NanoBanana_Vision(AlwaysExecuteMixin):
             modalities=["TEXT"],
             system_instruction=system_instruction,
             temperature=temperature,
+            media_resolution=media_resolution,
         )
 
         def _call():
@@ -995,7 +1035,7 @@ class NanoBanana_ImageGen(AlwaysExecuteMixin):
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var.",
                 }),
                 "model": (IMAGE_MODELS, {
-                    "default": "gemini-3.1-flash-image-preview",
+                    "default": "gemini-3.1-flash-image",
                     "tooltip": "NanoBanana - image model. For Imagen models, use the dedicated Imagen Image Generation node instead.",
                 }),
                 "custom_model": ("STRING", {
@@ -1009,11 +1049,11 @@ class NanoBanana_ImageGen(AlwaysExecuteMixin):
                 }),
                 "aspect_ratio": (ASPECT_RATIOS, {
                     "default": "16:9",
-                    "tooltip": "Output image aspect ratio.",
+                    "tooltip": "Output image aspect ratio. 1:4, 4:1, 1:8 and 8:1 are Nano Banana 2 and 2 Lite only.",
                 }),
                 "image_size": (IMAGE_SIZES, {
                     "default": "4K",
-                    "tooltip": "Output image resolution.",
+                    "tooltip": "Output image resolution. 512 is gemini-3.1-flash-image only; gemini-3.1-flash-lite-image is 1K only.",
                 }),
             },
             "optional": {
@@ -1056,6 +1096,10 @@ class NanoBanana_ImageGen(AlwaysExecuteMixin):
                     "tooltip": "JSON safety settings from Safety Settings node.",
                 }),
                             "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
+                "search_grounding": (["off", "web", "web + image"], {
+                    "default": "off",
+                    "tooltip": "Ground the image in Google Search results. Image search needs gemini-3.1-flash-image; web search is not available on gemini-3.1-flash-lite-image.",
+                }),
             },
         }
 
@@ -1083,6 +1127,7 @@ class NanoBanana_ImageGen(AlwaysExecuteMixin):
         ref_image_4=None,
         safety_settings_json="",
         network=None,
+        search_grounding="off",
     ):
         from google.genai import types
 
@@ -1114,6 +1159,7 @@ class NanoBanana_ImageGen(AlwaysExecuteMixin):
             image_size=image_size,
             candidate_count=candidate_count,
             safety_settings_json=safety_settings_json,
+            search_grounding=search_grounding,
         )
 
         def _call():
@@ -1141,7 +1187,7 @@ class NanoBanana_ImageEdit(AlwaysExecuteMixin):
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var.",
                 }),
                 "model": (IMAGE_MODELS, {
-                    "default": "gemini-3.1-flash-image-preview",
+                    "default": "gemini-3.1-flash-image",
                     "tooltip": "Image-capable Gemini model for editing.",
                 }),
                 "custom_model": ("STRING", {
@@ -1270,7 +1316,7 @@ class NanoBanana_Inpaint(AlwaysExecuteMixin):
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var.",
                 }),
                 "model": (IMAGE_MODELS, {
-                    "default": "gemini-3.1-flash-image-preview",
+                    "default": "gemini-3.1-flash-image",
                     "tooltip": "Image-capable Gemini model for inpainting.",
                 }),
                 "custom_model": ("STRING", {
@@ -1386,7 +1432,7 @@ class NanoBanana_Outpaint(AlwaysExecuteMixin):
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var.",
                 }),
                 "model": (IMAGE_MODELS, {
-                    "default": "gemini-3.1-flash-image-preview",
+                    "default": "gemini-3.1-flash-image",
                     "tooltip": "Image-capable Gemini model for outpainting.",
                 }),
                 "custom_model": ("STRING", {
@@ -1571,7 +1617,8 @@ class NanoBanana_ImagenGen(AlwaysExecuteMixin):
     """Generate images using Google Imagen models.
 
     Imagen uses a separate API endpoint (generate_images) from Gemini's image
-    generation. It supports Imagen 4 Ultra / Standard / Fast, plus Imagen 3.
+    generation. Google scheduled every Imagen 4 model for shutdown on
+    2026-08-17; use the Image Generation node with gemini-3.1-flash-image instead.
     """
 
     @classmethod
@@ -1585,7 +1632,7 @@ class NanoBanana_ImagenGen(AlwaysExecuteMixin):
                 }),
                 "model": (IMAGEN_MODELS, {
                     "default": "imagen-4.0-generate-001",
-                    "tooltip": "Imagen model. Ultra = highest quality, Standard = balanced, Fast = cheaper/faster.",
+                    "tooltip": "Imagen model. All Imagen 4 models were scheduled for shutdown on 2026-08-17; use Image Generation with gemini-3.1-flash-image.",
                 }),
                 "prompt": ("STRING", {
                     "multiline": True,
@@ -1728,11 +1775,12 @@ class NanoBanana_ImagenGen(AlwaysExecuteMixin):
 # ===================================================================
 
 class NanoBanana_TTS(AlwaysExecuteMixin):
-    """NanoBanana - Text-to-Speech. Uses generate_content with audio response modality.
+    """NanoBanana - Text-to-Speech.
 
-    Supports 30+ prebuilt voices (Zephyr, Puck, Kore, etc.). Can voice natural
-    speech with emotion, tone, and pacing. For multi-speaker dialogue, use
-    plain text with speaker tags like 'Alice: Hi!  Bob: Hello.'
+    Gemini 3.8 TTS models run on the Interactions API; the 2.5 and 3.1 models
+    use generate_content with an audio response modality. Supports 30
+    prebuilt voices (Zephyr, Puck, Kore, etc.). For multi-speaker dialogue,
+    use the TTS Multi-Speaker Dialogue node.
     """
 
     @classmethod
@@ -1742,7 +1790,7 @@ class NanoBanana_TTS(AlwaysExecuteMixin):
                 "api_key": ("STRING", {"default": "", "password": True,
                     "tooltip": "NanoBanana - API key. Leave blank to use GEMINI_API_KEY env var."}),
                 "model": (TTS_MODELS, {"default": "gemini-2.5-flash-preview-tts",
-                    "tooltip": "TTS model. Pro = higher quality, Flash = faster."}),
+                    "tooltip": "TTS model. gemini-3.8-flash-tts is the flagship, 3.8-flash-lite-tts the fast one."}),
                 "text": ("STRING", {"multiline": True, "default": "",
                     "tooltip": "Text to speak. Can include speaker tags for multi-speaker dialogue."}),
                 "voice": (TTS_VOICES, {"default": "Kore",
@@ -1751,8 +1799,10 @@ class NanoBanana_TTS(AlwaysExecuteMixin):
             "optional": {
                 "custom_model": ("STRING", {"default": ""}),
                 "style_prompt": ("STRING", {"multiline": True, "default": "",
-                    "tooltip": "Optional style instruction prepended to text (e.g., 'Say cheerfully:')."}),
+                    "tooltip": "Optional style instruction (e.g., 'cheerful and friendly'). Prepended to the text on 2.5/3.1 models; sent as speech style on 3.8 models."}),
                             "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
+                "custom_voice": ("STRING", {"default": "",
+                    "tooltip": "gemini-3.8 TTS only. A voice name from the extended voice library or a voice_... / voicekey_... ID from voice design or replication. Overrides the voice dropdown."}),
             },
         }
 
@@ -1761,7 +1811,8 @@ class NanoBanana_TTS(AlwaysExecuteMixin):
     FUNCTION = "generate"
     CATEGORY = "NanoBanana2/Audio"
 
-    def generate(self, api_key, model, text, voice, custom_model="", style_prompt="", network=None):
+    def generate(self, api_key, model, text, voice, custom_model="", style_prompt="", network=None,
+                 custom_voice=""):
         from google.genai import types
         import torch
         import numpy as np
@@ -1779,6 +1830,16 @@ class NanoBanana_TTS(AlwaysExecuteMixin):
         key = get_api_key(api_key)
         final_model = _resolve_model(model, custom_model)
         client = get_client(key, network=network)
+
+        if final_model in INTERACTIONS_TTS_MODELS:
+            turn = {"type": "text", "text": text}
+            if style_prompt.strip():
+                turn["annotations"] = [{"type": "speech_metadata", "style": style_prompt.strip()}]
+            return (interactions_audio(
+                client, "NanoBanana - TTS", model=final_model,
+                input=[{"type": "user_input", "content": [turn]}],
+                generation_config={"speech_config": [{"voice": custom_voice.strip() or voice}]},
+            ),)
 
         full_text = f"{style_prompt.strip()}\n{text}" if style_prompt.strip() else text
 
@@ -1827,8 +1888,8 @@ class NanoBanana_Embed(AlwaysExecuteMixin):
     """Generate text embeddings with Gemini embedding models.
 
     Useful for semantic search, clustering, classification, or RAG pipelines.
-    Returns the vector as JSON. gemini-embedding-001 produces 768-dim vectors
-    by default (configurable via output_dim).
+    Returns the vector as JSON; output_dim sets the vector size. Only
+    gemini-embedding-001 takes a task_type; gemini-embedding-2 does not.
     """
 
     @classmethod
@@ -1845,9 +1906,9 @@ class NanoBanana_Embed(AlwaysExecuteMixin):
                                "RETRIEVAL_QUERY", "RETRIEVAL_DOCUMENT", "QUESTION_ANSWERING",
                                "FACT_VERIFICATION", "CODE_RETRIEVAL_QUERY"],
                               {"default": "SEMANTIC_SIMILARITY",
-                               "tooltip": "Optimize the embedding for this downstream task."}),
+                               "tooltip": "Optimize the embedding for this downstream task. Ignored by gemini-embedding-2, which has no task_type."}),
                 "output_dim": ("INT", {"default": 768, "min": 128, "max": 3072, "step": 128,
-                    "tooltip": "Output dimensionality. 768 is default. Larger = more expressive."}),
+                    "tooltip": "Output dimensionality. Larger = more expressive. gemini-embedding-001 vectors below 3072 are not normalized."}),
                             "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
@@ -1865,10 +1926,10 @@ class NanoBanana_Embed(AlwaysExecuteMixin):
         final_model = _resolve_model(model, custom_model)
         client = get_client(key, network=network)
 
-        config = types.EmbedContentConfig(
-            task_type=task_type,
-            output_dimensionality=output_dim,
-        )
+        config_kwargs = {"output_dimensionality": output_dim}
+        if not final_model.startswith("gemini-embedding-2"):
+            config_kwargs["task_type"] = task_type
+        config = types.EmbedContentConfig(**config_kwargs)
 
         def _call():
             return client.models.embed_content(
@@ -1890,9 +1951,11 @@ class NanoBanana_Embed(AlwaysExecuteMixin):
 class NanoBanana_VideoGen(AlwaysExecuteMixin):
     """Generate video using Google Veo models.
 
-    Uses the predictLongRunning endpoint with polling. Veo 3 produces ~8-second
-    videos with native audio. Veo 2 is silent video. Can be text-to-video or
-    image-to-video (provide an optional source image).
+    Uses the predictLongRunning endpoint with polling. Veo 3.1 produces 4-8
+    second videos with native audio. Can be text-to-video, image-to-video
+    (source_image) or first/last-frame video (source_image + last_frame).
+    Google scheduled Veo 3.1 for shutdown on 2026-10-22; the Gemini Omni
+    Video node replaces it.
     """
 
     @classmethod
@@ -1900,7 +1963,7 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
         return {
             "required": {
                 "api_key": ("STRING", {"default": "", "password": True}),
-                "model": (VEO_MODELS, {"default": "veo-3.0-fast-generate-001"}),
+                "model": (VEO_MODELS, {"default": "veo-3.1-fast-generate-preview"}),
                 "prompt": ("STRING", {"multiline": True, "default": ""}),
             },
             "optional": {
@@ -1912,14 +1975,18 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
                 "seed": ("INT", {"default": -1, "min": -1, "max": 2147483647,
                     "tooltip": "-1 = random. 0 IS a valid seed (v2.0 silently dropped it)."}),
                 "duration_seconds": ("INT", {"default": 8, "min": 4, "max": 8,
-                    "tooltip": "Veo 2 supports 5-8s; Veo 3 supports 4, 6, or 8s "
-                               "depending on model variant."}),
+                    "tooltip": "Veo 3.1 supports 4, 6 or 8s. Must be 8 with "
+                               "1080p, 4k or reference images."}),
                 "timeout_seconds": ("INT", {"default": 600, "min": 60, "max": 1800,
                     "tooltip": "Max time to wait for video generation."}),
                 "poll_interval": ("INT", {"default": 10, "min": 2, "max": 60,
                     "tooltip": "Seconds between operation polls. Lower = "
                                "more responsive cancel, higher = less API noise."}),
                             "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
+                "resolution": (VEO_RESOLUTIONS, {"default": "AUTO",
+                    "tooltip": "Output resolution. AUTO uses the model default (720p). "
+                               "4k is not available on veo-3.1-lite."}),
+                "last_frame": ("IMAGE", {"tooltip": "Optional end frame. Use together with source_image."}),
             },
         }
 
@@ -1931,10 +1998,10 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
     def generate(self, api_key, model, prompt, custom_model="", source_image=None,
                  aspect_ratio="16:9", number_of_videos=1, negative_prompt="",
                  seed=-1, duration_seconds=8, timeout_seconds=600,
-                 poll_interval=10, network=None):
+                 poll_interval=10, network=None, resolution="AUTO",
+                 last_frame=None):
         from google.genai import types
         import time
-        import os
         import uuid
         from urllib.parse import urlparse
 
@@ -1943,12 +2010,7 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
         except ImportError:
             from shared.retry import stream_to_file
 
-        try:
-            import folder_paths
-            output_dir = folder_paths.get_output_directory()
-        except ImportError:
-            output_dir = os.path.join(os.getcwd(), "output")
-        os.makedirs(output_dir, exist_ok=True)
+        output_dir = _output_dir()
 
         key = get_api_key(api_key)
         # Sanitize so a malicious custom_model can't escape /models/ in URL.
@@ -1966,6 +2028,12 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
             cfg_kwargs["seed"] = seed
         if duration_seconds:
             cfg_kwargs["duration_seconds"] = duration_seconds
+        if resolution != "AUTO":
+            cfg_kwargs["resolution"] = resolution
+        if last_frame is not None:
+            cfg_kwargs["last_frame"] = types.Image(
+                image_bytes=tensor_to_png_bytes(last_frame), mime_type="image/png",
+            )
 
         config = types.GenerateVideosConfig(**cfg_kwargs)
 
@@ -2042,6 +2110,104 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
         return (saved_paths[0], saved_uris[0])
 
 
+class NanoBanana_OmniVideoGen(AlwaysExecuteMixin):
+    """Generate or edit video with Gemini Omni Flash (Interactions API).
+
+    Text-to-video, image-to-video, first/last-frame interpolation (two images),
+    subject references (several images), and conversational editing: wire the
+    interaction_id output into previous_interaction_id of the next call, or
+    pass an uploaded video's Files API URI as video_uri to edit or extend it.
+    Videos include native audio.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "api_key": ("STRING", {"default": "", "password": True}),
+                "model": (OMNI_MODELS, {"default": "gemini-omni-1.1-flash"}),
+                "prompt": ("STRING", {"multiline": True, "default": ""}),
+            },
+            "optional": {
+                "custom_model": ("STRING", {"default": ""}),
+                "image": ("IMAGE", {"tooltip": "Optional image(s): one = start frame, two = first and last frame, more = subject references. The prompt says how to use them."}),
+                "video_uri": ("STRING", {"default": "",
+                    "tooltip": "Files API URI of an uploaded video (Files Upload node) to edit or extend. Inputs up to 10 seconds."}),
+                "previous_interaction_id": ("STRING", {"default": "",
+                    "tooltip": "interaction_id of an earlier Omni call; the prompt then edits that video."}),
+                "aspect_ratio": (VEO_ASPECT_RATIOS, {"default": "16:9"}),
+                "resolution": (OMNI_RESOLUTIONS, {"default": "720p"}),
+                "delivery": (["base64", "uri"], {"default": "base64",
+                    "tooltip": "base64 returns the video inline (about 4 MB limit). uri downloads it through the Files API and supports larger videos."}),
+                "timeout_seconds": ("INT", {"default": 600, "min": 60, "max": 1800,
+                    "tooltip": "Max time to wait for the video."}),
+                "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("video_file_path", "interaction_id")
+    FUNCTION = "generate"
+    CATEGORY = "NanoBanana2/Video"
+
+    def generate(self, api_key, model, prompt, custom_model="", image=None,
+                 video_uri="", previous_interaction_id="", aspect_ratio="16:9",
+                 resolution="720p", delivery="base64", timeout_seconds=600,
+                 network=None):
+        import time
+        import uuid
+
+        key = get_api_key(api_key)
+        final_model = sanitize_model_id(_resolve_model(model, custom_model))
+        client = get_client(key, network=network)
+
+        media = []
+        if image is not None:
+            media += [
+                {"type": "image", "mime_type": "image/png",
+                 "data": base64.b64encode(tensor_to_png_bytes(image[i : i + 1])).decode("ascii")}
+                for i in range(image.shape[0])
+            ]
+        if video_uri.strip():
+            media.append({"type": "video", "uri": video_uri.strip()})
+
+        request = {
+            "model": final_model,
+            "input": media + [{"type": "text", "text": prompt}] if media else prompt,
+            "response_format": {
+                "type": "video", "aspect_ratio": aspect_ratio,
+                "resolution": resolution, "delivery": delivery,
+            },
+        }
+        if previous_interaction_id.strip():
+            request["previous_interaction_id"] = previous_interaction_id.strip()
+
+        print(f"[Gemini Omni] Starting video generation with {final_model}...")
+        interaction = retry_with_backoff(
+            lambda: client.interactions.create(timeout=timeout_seconds, **request)
+        )
+        video = getattr(interaction, "output_video", None)
+        if video is None:
+            raise RuntimeError("Gemini Omni returned no video.")
+
+        file_path = os.path.join(_output_dir(), f"gemini_omni_{uuid.uuid4().hex[:8]}.mp4")
+        if delivery == "base64":
+            with open(file_path, "wb") as f:
+                f.write(base64.b64decode(video.data))
+        else:
+            deadline = time.time() + timeout_seconds
+            while (state := client.files.get(name=video.uri).state.name) != "ACTIVE":
+                if state == "FAILED":
+                    raise RuntimeError("Omni video generation failed.")
+                if time.time() > deadline:
+                    raise RuntimeError(f"Omni video was not ready after {timeout_seconds}s.")
+                time.sleep(5)
+            client.files.download(file=video.uri, destination=file_path)
+
+        print(f"[Gemini Omni] Saved video: {file_path}")
+        return (file_path, interaction.id)
+
+
 # ===================================================================
 # Lyria Music Generation
 # ===================================================================
@@ -2049,8 +2215,10 @@ class NanoBanana_VideoGen(AlwaysExecuteMixin):
 class NanoBanana_MusicGen(AlwaysExecuteMixin):
     """Generate music using Google Lyria models.
 
-    Lyria 3 Clip produces ~30 second clips, Lyria 3 Pro is higher quality.
-    Uses predict endpoint for synchronous generation.
+    Lyria 3.5 writes full-length songs, Lyria 3 Clip always returns a 30
+    second clip. Uses the Interactions API; steer the result through the
+    prompt (genre, mood, lyrics with [Verse] / [Chorus] tags) and optional
+    reference images.
     """
 
     @classmethod
@@ -2060,13 +2228,18 @@ class NanoBanana_MusicGen(AlwaysExecuteMixin):
                 "api_key": ("STRING", {"default": "", "password": True}),
                 "model": (LYRIA_MODELS, {"default": "lyria-3-clip-preview"}),
                 "prompt": ("STRING", {"multiline": True, "default": "",
-                    "tooltip": "Describe the music (genre, mood, instruments, tempo)."}),
+                    "tooltip": "Describe the music (genre, mood, instruments, tempo). Add lyrics with [Verse] / [Chorus] tags."}),
             },
             "optional": {
                 "custom_model": ("STRING", {"default": ""}),
-                "negative_prompt": ("STRING", {"default": ""}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 2147483647}),
-                "sample_count": ("INT", {"default": 1, "min": 1, "max": 4}),
+                "negative_prompt": ("STRING", {"default": "",
+                    "tooltip": "Appended to the prompt as 'Avoid: ...'."}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 2147483647,
+                    "tooltip": "Unused: the Lyria API takes no seed."}),
+                "sample_count": ("INT", {"default": 1, "min": 1, "max": 4,
+                    "tooltip": "Unused: the Lyria API returns one track per call."}),
+                "image": ("IMAGE", {"tooltip": "Optional reference image(s), up to 10, that inspire the music."}),
+                "network": ("NB_NETWORK", {"tooltip": "Optional. Wire a NanoBanana - Network Route node here to route this request through that proxy (e.g. US egress)."}),
             },
         }
 
@@ -2076,81 +2249,24 @@ class NanoBanana_MusicGen(AlwaysExecuteMixin):
     CATEGORY = "NanoBanana2/Audio"
 
     def generate(self, api_key, model, prompt, custom_model="",
-                 negative_prompt="", seed=0, sample_count=1):
-        import torch
-        import numpy as np
-        import requests
-        import io
-
+                 negative_prompt="", seed=0, sample_count=1, image=None, network=None):
         key = get_api_key(api_key)
-        # Hard-validate model ID — without this a malicious custom_model like
-        # "../some-other-endpoint" could escape the /models/ path (URL-path
-        # injection / SSRF within googleapis.com).
         final_model = sanitize_model_id(_resolve_model(model, custom_model))
+        client = get_client(key, network=network)
 
-        # Lyria uses the :predict endpoint directly. Pass key via header (NOT
-        # query param) so it can't end up in proxy/CDN access logs or URL-
-        # truncation tracebacks.
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{final_model}:predict"
-        instances = [{"prompt": prompt}]
-        if negative_prompt.strip():
-            instances[0]["negativePrompt"] = negative_prompt.strip()
-
-        parameters = {"sampleCount": sample_count}
-        # v2.0 used `if seed > 0` which silently dropped seed=0; v2.1 honors it.
-        if seed >= 0:
-            parameters["seed"] = seed
-
-        body = {"instances": instances, "parameters": parameters}
-
-        def _call():
-            # Context-manage so the connection is returned to the pool even
-            # if .json() throws or we raise mid-handling.
-            with requests.post(
-                url, json=body,
-                headers={"x-goog-api-key": key},
-                timeout=600,
-            ) as resp:
-                if resp.status_code >= 400:
-                    # Redact in case the server echoes back the request headers
-                    # (some Google error pages do for debug purposes).
-                    raise RuntimeError(
-                        f"Lyria API error {resp.status_code}: "
-                        f"{redact_secret(resp.text[:400])}"
-                    )
-                return resp.json()
-
-        data = retry_with_backoff(_call)
-
-        predictions = data.get("predictions", [])
-        if not predictions:
-            raise RuntimeError(f"Lyria returned no audio. Response: {data}")
-
-        # Extract audio (base64-encoded)
-        import base64
-        pred = predictions[0]
-        audio_b64 = pred.get("bytesBase64Encoded") or pred.get("audio") or ""
-        if not audio_b64:
-            raise RuntimeError(f"Could not extract audio from Lyria response: {pred}")
-
-        audio_bytes = base64.b64decode(audio_b64)
-
-        # Lyria output is typically 48kHz stereo PCM or WAV
-        try:
-            import soundfile as sf
-            buf = io.BytesIO(audio_bytes)
-            audio_np, sample_rate = sf.read(buf, dtype="float32")
-            if audio_np.ndim == 1:
-                waveform = torch.from_numpy(audio_np).unsqueeze(0).unsqueeze(0)
-            else:
-                waveform = torch.from_numpy(audio_np.T).unsqueeze(0)
-        except Exception:
-            # Fallback: assume 48kHz int16 PCM
-            sample_rate = 48000
-            audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
-            waveform = torch.from_numpy(audio_np).unsqueeze(0).unsqueeze(0)
-
-        return ({"waveform": waveform, "sample_rate": sample_rate},)
+        text = f"{prompt}\nAvoid: {negative_prompt.strip()}" if negative_prompt.strip() else prompt
+        if image is None:
+            contents = text
+        else:
+            contents = [{"type": "text", "text": text}] + [
+                {"type": "image", "mime_type": "image/png",
+                 "data": base64.b64encode(tensor_to_png_bytes(image[i : i + 1])).decode("ascii")}
+                for i in range(image.shape[0])
+            ]
+        return (interactions_audio(
+            client, "Lyria", timeout=600, wav=final_model == "lyria-3.5",
+            model=final_model, input=contents,
+        ),)
 
 
 # ===================================================================
@@ -2166,7 +2282,7 @@ class NanoBanana_CountTokens(AlwaysExecuteMixin):
         return {
             "required": {
                 "api_key": ("STRING", {"default": "", "password": True}),
-                "model": (TEXT_MODELS, {"default": "gemini-2.5-flash"}),
+                "model": (TEXT_MODELS, {"default": "gemini-3.8-flash"}),
                 "text": ("STRING", {"multiline": True, "default": ""}),
             },
             "optional": {
@@ -2218,8 +2334,9 @@ NODE_CLASS_MAPPINGS = {
     # Audio (2)
     "NanoBanana_TTS": NanoBanana_TTS,
     "NanoBanana_MusicGen": NanoBanana_MusicGen,
-    # Video (1)
+    # Video (2)
     "NanoBanana_VideoGen": NanoBanana_VideoGen,
+    "NanoBanana_OmniVideoGen": NanoBanana_OmniVideoGen,
     # Embeddings (1)
     "NanoBanana_Embed": NanoBanana_Embed,
 }
@@ -2249,6 +2366,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "NanoBanana_MusicGen": "NanoBanana - Music Generation (Lyria)",
     # Video
     "NanoBanana_VideoGen": "NanoBanana - Video Generation (Veo)",
+    "NanoBanana_OmniVideoGen": "NanoBanana - Video Generation (Gemini Omni)",
     # Embeddings
     "NanoBanana_Embed": "NanoBanana - Text Embeddings",
 }
