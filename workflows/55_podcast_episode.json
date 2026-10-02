@@ -59,6 +59,11 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -77,7 +82,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "",
         "Write a short 2-speaker podcast script (about 10 exchanges) between HOST and GUEST discussing the future of AI music generation. Format each line as 'HOST: ...' or 'GUEST: ...'.",
         "",
@@ -122,6 +127,11 @@
           "widget": {
             "name": "dialogue"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -186,7 +196,7 @@
       ],
       "size": [
         320,
-        312
+        332
       ],
       "flags": {},
       "order": 5,
@@ -199,6 +209,16 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -217,7 +237,7 @@
       },
       "widgets_values": [
         "",
-        "lyria-3-pro-preview",
+        "lyria-3.5",
         "Upbeat tech podcast intro music, modern electronic, 30 seconds, professional and energetic",
         "",
         "vocals, lyrics",
@@ -348,7 +368,7 @@
         835,
         515,
         770,
-        606
+        626
       ],
       "color": "#3F789E",
       "font_size": 24,

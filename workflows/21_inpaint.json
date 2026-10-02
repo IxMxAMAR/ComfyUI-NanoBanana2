@@ -65,7 +65,7 @@
         "Node name for S&R": "NanoBanana_ModelSelector"
       },
       "widgets_values": [
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "image_gen",
         ""
       ]
@@ -120,7 +120,7 @@
       ],
       "size": [
         320,
-        384
+        404
       ],
       "flags": {},
       "order": 4,
@@ -156,6 +156,11 @@
           "name": "reference_image",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -174,7 +179,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "Fill the masked area with a wooden door with ornate brass hardware",
         ""
@@ -270,7 +275,7 @@
         435,
         -9,
         370,
-        478
+        498
       ],
       "color": "#3F789E",
       "font_size": 24,

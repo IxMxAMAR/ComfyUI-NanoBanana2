@@ -65,7 +65,7 @@
         "Node name for S&R": "NanoBanana_ModelSelector"
       },
       "widgets_values": [
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "image_gen",
         ""
       ]
@@ -157,7 +157,7 @@
       ],
       "size": [
         320,
-        572
+        616
       ],
       "flags": {},
       "order": 5,
@@ -198,6 +198,11 @@
           "name": "ref_image_4",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -216,7 +221,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "Combine the styles of these two reference images into a portrait of a young artist in a studio",
         "3:4",
@@ -227,7 +232,8 @@
         -1,
         "randomize",
         1,
-        ""
+        "",
+        "off"
       ]
     },
     {
@@ -320,7 +326,7 @@
         435,
         -9,
         370,
-        666
+        710
       ],
       "color": "#3F789E",
       "font_size": 24,

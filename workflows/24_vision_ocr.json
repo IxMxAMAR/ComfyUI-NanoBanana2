@@ -83,7 +83,7 @@
       ],
       "size": [
         320,
-        184
+        228
       ],
       "flags": {},
       "order": 3,
@@ -101,6 +101,11 @@
           "name": "image",
           "type": "IMAGE",
           "link": 2
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -122,7 +127,8 @@
         "gemini-flash-latest",
         "",
         "markdown",
-        ""
+        "",
+        "AUTO"
       ]
     },
     {
@@ -211,7 +217,7 @@
         435,
         -9,
         370,
-        278
+        322
       ],
       "color": "#3F789E",
       "font_size": 24,

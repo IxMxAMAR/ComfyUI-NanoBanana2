@@ -59,6 +59,11 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -196,6 +201,11 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -333,6 +343,11 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [

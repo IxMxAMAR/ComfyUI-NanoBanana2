@@ -77,7 +77,7 @@
       ],
       "size": [
         320,
-        264
+        380
       ],
       "flags": {},
       "order": 3,
@@ -95,6 +95,11 @@
           "name": "audio",
           "type": "AUDIO",
           "link": 2
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -116,7 +121,11 @@
         "gemini-flash-latest",
         "",
         "Transcribe this audio verbatim. Include timestamps and speaker labels if you can identify them.",
-        true
+        true,
+        "",
+        "",
+        false,
+        "VERBATIM"
       ]
     },
     {
@@ -205,7 +214,7 @@
         435,
         -9,
         370,
-        358
+        474
       ],
       "color": "#3F789E",
       "font_size": 24,

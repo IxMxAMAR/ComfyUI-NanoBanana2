@@ -44,7 +44,7 @@
       ],
       "size": [
         320,
-        368
+        392
       ],
       "flags": {},
       "order": 2,
@@ -57,6 +57,11 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -78,6 +83,7 @@
         "gemini-2.5-flash-preview-tts",
         "Hello world. This is a test of Gemini text-to-speech. The voice you're hearing is called Kore.",
         "Kore",
+        "",
         "",
         ""
       ]
@@ -148,7 +154,7 @@
         435,
         -9,
         370,
-        462
+        486
       ],
       "color": "#3F789E",
       "font_size": 24,

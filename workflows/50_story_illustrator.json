@@ -61,6 +61,11 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -77,7 +82,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "",
         "Write a short illustrated children's story in exactly 4 paragraphs. Each paragraph should describe a single vivid scene that could be illustrated. Label each paragraph: [P1], [P2], [P3], [P4].",
         "",
@@ -101,7 +106,7 @@
       ],
       "size": [
         320,
-        572
+        616
       ],
       "flags": {},
       "order": 3,
@@ -134,6 +139,11 @@
           "name": "ref_image_4",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -152,7 +162,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "Illustrate paragraph 1 of a children's story: a young fox sets off on an adventure through a golden autumn forest, whimsical storybook art style",
         "4:3",
@@ -163,7 +173,8 @@
         -1,
         "randomize",
         1,
-        ""
+        "",
+        "off"
       ]
     },
     {
@@ -199,11 +210,11 @@
       "type": "NanoBanana_ImageGen",
       "pos": [
         860,
-        956
+        1044
       ],
       "size": [
         320,
-        572
+        616
       ],
       "flags": {},
       "order": 5,
@@ -236,6 +247,11 @@
           "name": "ref_image_4",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -254,7 +270,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "Illustrate paragraph 2 of a children's story: the fox discovers a hidden waterfall with glowing fireflies, magical atmosphere, watercolour style",
         "4:3",
@@ -265,7 +281,8 @@
         -1,
         "randomize",
         1,
-        ""
+        "",
+        "off"
       ]
     },
     {
@@ -273,7 +290,7 @@
       "type": "PreviewImage",
       "pos": [
         1260,
-        820
+        864
       ],
       "size": [
         320,
@@ -301,11 +318,11 @@
       "type": "NanoBanana_ImageGen",
       "pos": [
         860,
-        1988
+        2208
       ],
       "size": [
         320,
-        572
+        616
       ],
       "flags": {},
       "order": 7,
@@ -338,6 +355,11 @@
           "name": "ref_image_4",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -356,7 +378,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "Illustrate paragraph 3 of a children's story: the fox befriends a wise old owl perched on an ancient oak tree, warm evening light",
         "4:3",
@@ -367,7 +389,8 @@
         -1,
         "randomize",
         1,
-        ""
+        "",
+        "off"
       ]
     },
     {
@@ -375,7 +398,7 @@
       "type": "PreviewImage",
       "pos": [
         1260,
-        1716
+        1848
       ],
       "size": [
         320,
@@ -403,11 +426,11 @@
       "type": "NanoBanana_ImageGen",
       "pos": [
         860,
-        3156
+        3552
       ],
       "size": [
         320,
-        572
+        616
       ],
       "flags": {},
       "order": 9,
@@ -440,6 +463,11 @@
           "name": "ref_image_4",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -458,7 +486,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "Illustrate paragraph 4 of a children's story: the fox returns home at sunset carrying a glowing acorn, heartwarming storybook finale",
         "4:3",
@@ -469,7 +497,8 @@
         -1,
         "randomize",
         1,
-        ""
+        "",
+        "off"
       ]
     },
     {
@@ -477,7 +506,7 @@
       "type": "PreviewImage",
       "pos": [
         1260,
-        2748
+        3012
       ],
       "size": [
         320,
@@ -606,7 +635,7 @@
         835,
         -9,
         770,
-        666
+        710
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -616,9 +645,9 @@
       "title": "Paragraph 2",
       "bounding": [
         835,
-        751,
+        795,
         770,
-        802
+        890
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -628,9 +657,9 @@
       "title": "Paragraph 3",
       "bounding": [
         835,
-        1647,
+        1779,
         770,
-        938
+        1070
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -640,9 +669,9 @@
       "title": "Paragraph 4",
       "bounding": [
         835,
-        2679,
+        2943,
         770,
-        1074
+        1250
       ],
       "color": "#3F789E",
       "font_size": 24,

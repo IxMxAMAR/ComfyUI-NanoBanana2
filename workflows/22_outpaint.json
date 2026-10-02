@@ -65,7 +65,7 @@
         "Node name for S&R": "NanoBanana_ModelSelector"
       },
       "widgets_values": [
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "image_gen",
         ""
       ]
@@ -118,7 +118,7 @@
       ],
       "size": [
         320,
-        392
+        412
       ],
       "flags": {},
       "order": 4,
@@ -144,6 +144,11 @@
           "name": "image",
           "type": "IMAGE",
           "link": 3
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -162,7 +167,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "right",
         "Extend the scene with a misty forest in the distance, matching the existing lighting",
@@ -252,7 +257,7 @@
         435,
         -9,
         370,
-        486
+        506
       ],
       "color": "#3F789E",
       "font_size": 24,

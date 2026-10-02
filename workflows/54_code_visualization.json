@@ -58,6 +58,11 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -89,7 +94,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "Write a Python function that returns the first N Fibonacci numbers using an iterative approach. Include a brief docstring and a sample call at the bottom.",
         "",
         0.2
@@ -125,6 +130,11 @@
           "widget": {
             "name": "prompt"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -143,7 +153,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "",
         "Explain the following Python code to a beginner programmer in plain English. Focus on the algorithm logic and time complexity:\n\n",
         "",

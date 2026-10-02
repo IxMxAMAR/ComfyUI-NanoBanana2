@@ -118,7 +118,7 @@
       ],
       "size": [
         320,
-        452
+        496
       ],
       "flags": {},
       "order": 4,
@@ -159,6 +159,11 @@
           "name": "ref_image_4",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -182,7 +187,8 @@
         "Describe this image in detail. Include composition, colors, lighting, mood, and any interesting details you notice.",
         "",
         0.7,
-        false
+        false,
+        "AUTO"
       ]
     },
     {
@@ -279,7 +285,7 @@
         435,
         -9,
         370,
-        546
+        590
       ],
       "color": "#3F789E",
       "font_size": 24,

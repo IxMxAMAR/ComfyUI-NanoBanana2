@@ -80,7 +80,7 @@
       ],
       "size": [
         320,
-        572
+        616
       ],
       "flags": {},
       "order": 3,
@@ -121,6 +121,11 @@
           "widget": {
             "name": "safety_settings_json"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -139,7 +144,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "A peaceful nature scene with a meadow, wildflowers, and a calm river",
         "16:9",
@@ -150,7 +155,8 @@
         -1,
         "randomize",
         1,
-        ""
+        "",
+        "off"
       ]
     },
     {
@@ -227,7 +233,7 @@
         435,
         -9,
         370,
-        666
+        710
       ],
       "color": "#3F789E",
       "font_size": 24,

@@ -44,7 +44,7 @@
       ],
       "size": [
         320,
-        312
+        332
       ],
       "flags": {},
       "order": 2,
@@ -57,6 +57,16 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -150,7 +160,7 @@
         435,
         -9,
         370,
-        406
+        426
       ],
       "color": "#3F789E",
       "font_size": 24,

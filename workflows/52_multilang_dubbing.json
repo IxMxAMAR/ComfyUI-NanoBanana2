@@ -83,7 +83,7 @@
       ],
       "size": [
         320,
-        264
+        380
       ],
       "flags": {},
       "order": 3,
@@ -101,6 +101,11 @@
           "name": "audio",
           "type": "AUDIO",
           "link": 8
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -121,10 +126,14 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "",
         "Transcribe this audio verbatim.",
-        false
+        false,
+        "",
+        "",
+        false,
+        "VERBATIM"
       ]
     },
     {
@@ -157,6 +166,11 @@
           "widget": {
             "name": "prompt"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -175,7 +189,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "",
         "Translate the following text to French. Return only the translation:\n\n",
         "",
@@ -220,6 +234,11 @@
           "widget": {
             "name": "prompt"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -238,7 +257,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "",
         "Translate the following text to Spanish. Return only the translation:\n\n",
         "",
@@ -283,6 +302,11 @@
           "widget": {
             "name": "prompt"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -301,7 +325,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "",
         "Translate the following text to German. Return only the translation:\n\n",
         "",
@@ -325,7 +349,7 @@
       ],
       "size": [
         320,
-        368
+        392
       ],
       "flags": {},
       "order": 7,
@@ -346,6 +370,11 @@
           "widget": {
             "name": "text"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -367,6 +396,7 @@
         "gemini-2.5-flash-preview-tts",
         "",
         "Aoede",
+        "",
         "",
         ""
       ]
@@ -404,11 +434,11 @@
       "type": "NanoBanana_TTS",
       "pos": [
         1260,
-        848
+        896
       ],
       "size": [
         320,
-        368
+        392
       ],
       "flags": {},
       "order": 9,
@@ -429,6 +459,11 @@
           "widget": {
             "name": "text"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -451,6 +486,7 @@
         "",
         "Charon",
         "",
+        "",
         ""
       ]
     },
@@ -459,7 +495,7 @@
       "type": "PreviewAudio",
       "pos": [
         1660,
-        616
+        640
       ],
       "size": [
         320,
@@ -487,11 +523,11 @@
       "type": "NanoBanana_TTS",
       "pos": [
         1260,
-        1868
+        1988
       ],
       "size": [
         320,
-        368
+        392
       ],
       "flags": {},
       "order": 11,
@@ -512,6 +548,11 @@
           "widget": {
             "name": "text"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -534,6 +575,7 @@
         "",
         "Fenrir",
         "",
+        "",
         ""
       ]
     },
@@ -542,7 +584,7 @@
       "type": "PreviewAudio",
       "pos": [
         1660,
-        1404
+        1476
       ],
       "size": [
         320,
@@ -723,7 +765,7 @@
         435,
         -9,
         370,
-        358
+        474
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -747,7 +789,7 @@
         1235,
         -9,
         770,
-        462
+        486
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -757,9 +799,9 @@
       "title": "Speak ES",
       "bounding": [
         1235,
-        547,
+        571,
         770,
-        694
+        742
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -769,9 +811,9 @@
       "title": "Speak DE",
       "bounding": [
         1235,
-        1335,
+        1407,
         770,
-        926
+        998
       ],
       "color": "#3F789E",
       "font_size": 24,

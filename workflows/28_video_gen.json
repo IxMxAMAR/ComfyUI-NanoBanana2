@@ -44,7 +44,7 @@
       ],
       "size": [
         320,
-        428
+        472
       ],
       "flags": {},
       "order": 2,
@@ -60,6 +60,16 @@
         },
         {
           "name": "source_image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
+        },
+        {
+          "name": "last_frame",
           "type": "IMAGE",
           "link": null
         }
@@ -96,7 +106,8 @@
         "randomize",
         8,
         600,
-        10
+        10,
+        "AUTO"
       ]
     },
     {
@@ -177,7 +188,7 @@
         435,
         -9,
         370,
-        522
+        566
       ],
       "color": "#3F789E",
       "font_size": 24,

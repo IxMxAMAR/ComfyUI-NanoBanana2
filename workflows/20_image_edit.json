@@ -65,7 +65,7 @@
         "Node name for S&R": "NanoBanana_ModelSelector"
       },
       "widgets_values": [
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "image_gen",
         ""
       ]
@@ -118,7 +118,7 @@
       ],
       "size": [
         320,
-        472
+        492
       ],
       "flags": {},
       "order": 4,
@@ -164,6 +164,11 @@
           "name": "reference_image_3",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -182,7 +187,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "Change the sky to a vibrant sunset with purple and orange hues",
         "",
@@ -272,7 +277,7 @@
         435,
         -9,
         370,
-        566
+        586
       ],
       "color": "#3F789E",
       "font_size": 24,

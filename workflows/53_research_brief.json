@@ -59,6 +59,11 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -83,7 +88,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "What are the latest breakthroughs in large language model efficiency in 2025\u20132026?",
         "",
         "",
@@ -120,6 +125,11 @@
           "widget": {
             "name": "base_prompt"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -139,7 +149,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "",
         "",
         "image",
@@ -157,7 +167,7 @@
       ],
       "size": [
         320,
-        368
+        392
       ],
       "flags": {},
       "order": 4,
@@ -178,6 +188,11 @@
           "widget": {
             "name": "text"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -199,6 +214,7 @@
         "gemini-2.5-flash-preview-tts",
         "",
         "Kore",
+        "",
         "",
         ""
       ]

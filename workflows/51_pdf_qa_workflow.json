@@ -59,6 +59,11 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -118,6 +123,11 @@
           "widget": {
             "name": "file_uri"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -137,7 +147,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "",
         "application/pdf",
         "Please summarise the key findings of this document in 3\u20134 sentences suitable for a spoken answer.",
@@ -155,7 +165,7 @@
       ],
       "size": [
         320,
-        368
+        392
       ],
       "flags": {},
       "order": 4,
@@ -176,6 +186,11 @@
           "widget": {
             "name": "text"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -197,6 +212,7 @@
         "gemini-2.5-flash-preview-tts",
         "",
         "Kore",
+        "",
         "",
         ""
       ]
@@ -371,7 +387,7 @@
         1235,
         -9,
         370,
-        462
+        486
       ],
       "color": "#3F789E",
       "font_size": 24,

@@ -61,6 +61,11 @@
           "widget": {
             "name": "api_key"
           }
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -131,7 +136,7 @@
       ],
       "size": [
         320,
-        472
+        492
       ],
       "flags": {},
       "order": 4,
@@ -169,6 +174,11 @@
           "name": "reference_image_3",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -187,7 +197,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "Change the watch strap colour to rose gold, keep all other elements identical",
         "",
@@ -228,11 +238,11 @@
       "type": "NanoBanana_ImageEdit",
       "pos": [
         860,
-        2440
+        2480
       ],
       "size": [
         320,
-        472
+        492
       ],
       "flags": {},
       "order": 6,
@@ -270,6 +280,11 @@
           "name": "reference_image_3",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -288,7 +303,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "Place the watch on a dark slate surface with dramatic moody lighting, keep product identical",
         "",
@@ -301,7 +316,7 @@
       "type": "PreviewImage",
       "pos": [
         1260,
-        1874
+        1894
       ],
       "size": [
         320,
@@ -329,11 +344,11 @@
       "type": "NanoBanana_ImageEdit",
       "pos": [
         860,
-        3702
+        3802
       ],
       "size": [
         320,
-        472
+        492
       ],
       "flags": {},
       "order": 8,
@@ -371,6 +386,11 @@
           "name": "reference_image_3",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -390,7 +410,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "Add a subtle nature background \u2014 blurred green leaves \u2014 while keeping the watch centred and sharp",
         "",
@@ -403,7 +423,7 @@
       "type": "PreviewImage",
       "pos": [
         1260,
-        3100
+        3160
       ],
       "size": [
         320,
@@ -431,11 +451,11 @@
       "type": "NanoBanana_Outpaint",
       "pos": [
         1660,
-        2040
+        2100
       ],
       "size": [
         320,
-        392
+        412
       ],
       "flags": {},
       "order": 10,
@@ -453,6 +473,11 @@
           "name": "image",
           "type": "IMAGE",
           "link": 13
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -471,7 +496,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "right",
         "Extend the studio background naturally to the right for a wide banner format, seamless, clean white gradient",
@@ -484,7 +509,7 @@
       "type": "PreviewImage",
       "pos": [
         2060,
-        2040
+        2100
       ],
       "size": [
         320,
@@ -653,7 +678,7 @@
         835,
         615,
         770,
-        1096
+        1116
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -663,9 +688,9 @@
       "title": "Variation 2",
       "bounding": [
         835,
-        1805,
+        1825,
         770,
-        1132
+        1172
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -675,9 +700,9 @@
       "title": "Variation 3",
       "bounding": [
         835,
-        3031,
+        3091,
         770,
-        1168
+        1228
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -687,7 +712,7 @@
       "title": "Banner",
       "bounding": [
         1635,
-        1971,
+        2031,
         770,
         530
       ],

@@ -45,7 +45,7 @@
       ],
       "size": [
         320,
-        572
+        616
       ],
       "flags": {},
       "order": 2,
@@ -78,6 +78,11 @@
           "name": "ref_image_4",
           "type": "IMAGE",
           "link": null
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
         }
       ],
       "outputs": [
@@ -97,7 +102,7 @@
       },
       "widgets_values": [
         "",
-        "gemini-3.1-flash-image-preview",
+        "gemini-3.1-flash-image",
         "",
         "A lone astronaut standing on the surface of Mars at dawn, dramatic red sky, dust swirling, cinematic wide shot",
         "16:9",
@@ -108,7 +113,8 @@
         -1,
         "randomize",
         1,
-        ""
+        "",
+        "off"
       ]
     },
     {
@@ -150,7 +156,7 @@
       ],
       "size": [
         320,
-        428
+        472
       ],
       "flags": {},
       "order": 4,
@@ -168,6 +174,16 @@
           "name": "source_image",
           "type": "IMAGE",
           "link": 4
+        },
+        {
+          "name": "network",
+          "type": "NB_NETWORK",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null
         }
       ],
       "outputs": [
@@ -202,7 +218,8 @@
         "randomize",
         8,
         600,
-        10
+        10,
+        "AUTO"
       ]
     },
     {
@@ -307,7 +324,7 @@
         435,
         -9,
         370,
-        666
+        710
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -331,7 +348,7 @@
         1235,
         -9,
         370,
-        522
+        566
       ],
       "color": "#3F789E",
       "font_size": 24,
