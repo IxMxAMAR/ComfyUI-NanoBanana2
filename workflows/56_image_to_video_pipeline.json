@@ -120,7 +120,7 @@
       ],
       "size": [
         320,
-        88
+        468
       ],
       "flags": {},
       "order": 3,
@@ -214,7 +214,7 @@
       ],
       "size": [
         320,
-        88
+        188
       ],
       "flags": {},
       "order": 5,
@@ -293,9 +293,9 @@
       "title": "Setup",
       "bounding": [
         35,
-        -1,
+        -9,
         370,
-        174
+        182
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -305,9 +305,9 @@
       "title": "Image Gen",
       "bounding": [
         435,
-        -1,
+        -9,
         370,
-        658
+        666
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -317,9 +317,9 @@
       "title": "Save",
       "bounding": [
         835,
-        -1,
+        -9,
         370,
-        174
+        562
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -329,9 +329,9 @@
       "title": "Video Gen",
       "bounding": [
         1235,
-        -1,
+        -9,
         370,
-        514
+        522
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -341,9 +341,9 @@
       "title": "Output",
       "bounding": [
         1635,
-        -1,
+        -9,
         370,
-        174
+        282
       ],
       "color": "#3F789E",
       "font_size": 24,

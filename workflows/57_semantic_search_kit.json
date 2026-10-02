@@ -139,11 +139,11 @@
       "type": "ShowText|pysssss",
       "pos": [
         1260,
-        60
+        764
       ],
       "size": [
         320,
-        88
+        188
       ],
       "flags": {},
       "order": 4,
@@ -179,7 +179,7 @@
       "type": "NanoBanana_Embed",
       "pos": [
         460,
-        418
+        728
       ],
       "size": [
         320,
@@ -232,7 +232,7 @@
       "type": "NanoBanana_EmbedSave",
       "pos": [
         860,
-        246
+        556
       ],
       "size": [
         320,
@@ -276,11 +276,11 @@
       "type": "ShowText|pysssss",
       "pos": [
         1260,
-        198
+        1002
       ],
       "size": [
         320,
-        88
+        188
       ],
       "flags": {},
       "order": 7,
@@ -316,7 +316,7 @@
       "type": "NanoBanana_Embed",
       "pos": [
         460,
-        776
+        1568
       ],
       "size": [
         320,
@@ -369,7 +369,7 @@
       "type": "NanoBanana_EmbedSave",
       "pos": [
         860,
-        432
+        1224
       ],
       "size": [
         320,
@@ -413,11 +413,11 @@
       "type": "ShowText|pysssss",
       "pos": [
         1260,
-        336
+        1240
       ],
       "size": [
         320,
-        88
+        188
       ],
       "flags": {},
       "order": 10,
@@ -528,9 +528,9 @@
       "title": "Setup",
       "bounding": [
         35,
-        -1,
+        -9,
         370,
-        174
+        182
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -540,9 +540,9 @@
       "title": "Embed Doc 1",
       "bounding": [
         435,
-        -1,
+        -9,
         770,
-        394
+        402
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -552,9 +552,9 @@
       "title": "Embed Doc 2",
       "bounding": [
         435,
-        185,
+        487,
         770,
-        566
+        574
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -564,9 +564,9 @@
       "title": "Embed Doc 3",
       "bounding": [
         435,
-        371,
+        1155,
         770,
-        738
+        746
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -576,9 +576,9 @@
       "title": "Saved Paths",
       "bounding": [
         1235,
-        -1,
+        695,
         370,
-        450
+        758
       ],
       "color": "#3F789E",
       "font_size": 24,

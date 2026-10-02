@@ -210,7 +210,7 @@
       ],
       "size": [
         320,
-        88
+        188
       ],
       "flags": {},
       "order": 5,
@@ -246,11 +246,11 @@
       "type": "PreviewAudio",
       "pos": [
         1660,
-        198
+        298
       ],
       "size": [
         320,
-        56
+        136
       ],
       "flags": {},
       "order": 6,
@@ -333,9 +333,9 @@
       "title": "Setup",
       "bounding": [
         35,
-        -1,
+        -9,
         370,
-        174
+        182
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -345,9 +345,9 @@
       "title": "Upload",
       "bounding": [
         435,
-        -1,
+        -9,
         370,
-        266
+        274
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -357,9 +357,9 @@
       "title": "Q&A",
       "bounding": [
         835,
-        -1,
+        -9,
         370,
-        422
+        430
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -369,9 +369,9 @@
       "title": "Read Aloud",
       "bounding": [
         1235,
-        -1,
+        -9,
         370,
-        454
+        462
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -381,9 +381,9 @@
       "title": "Output",
       "bounding": [
         1635,
-        -1,
+        -9,
         370,
-        280
+        468
       ],
       "color": "#3F789E",
       "font_size": 24,

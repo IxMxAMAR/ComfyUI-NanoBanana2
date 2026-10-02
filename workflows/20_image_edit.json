@@ -199,7 +199,7 @@
       ],
       "size": [
         320,
-        56
+        436
       ],
       "flags": {},
       "order": 5,
@@ -258,9 +258,9 @@
       "title": "Setup",
       "bounding": [
         35,
-        -1,
+        -9,
         370,
-        518
+        526
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -270,9 +270,9 @@
       "title": "Generate",
       "bounding": [
         435,
-        -1,
+        -9,
         370,
-        558
+        566
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -282,9 +282,9 @@
       "title": "Preview",
       "bounding": [
         835,
-        -1,
+        -9,
         370,
-        142
+        530
       ],
       "color": "#3F789E",
       "font_size": 24,

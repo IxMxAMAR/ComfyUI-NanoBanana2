@@ -380,7 +380,7 @@
       ],
       "size": [
         320,
-        56
+        136
       ],
       "flags": {},
       "order": 8,
@@ -404,7 +404,7 @@
       "type": "NanoBanana_TTS",
       "pos": [
         1260,
-        478
+        848
       ],
       "size": [
         320,
@@ -459,11 +459,11 @@
       "type": "PreviewAudio",
       "pos": [
         1660,
-        166
+        616
       ],
       "size": [
         320,
-        56
+        136
       ],
       "flags": {},
       "order": 10,
@@ -487,7 +487,7 @@
       "type": "NanoBanana_TTS",
       "pos": [
         1260,
-        896
+        1868
       ],
       "size": [
         320,
@@ -542,11 +542,11 @@
       "type": "PreviewAudio",
       "pos": [
         1660,
-        272
+        1404
       ],
       "size": [
         320,
-        56
+        136
       ],
       "flags": {},
       "order": 12,
@@ -709,9 +709,9 @@
       "title": "Setup",
       "bounding": [
         35,
-        -1,
+        -9,
         370,
-        312
+        320
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -721,9 +721,9 @@
       "title": "Transcribe",
       "bounding": [
         435,
-        -1,
+        -9,
         370,
-        350
+        358
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -733,9 +733,9 @@
       "title": "Translate",
       "bounding": [
         835,
-        -1,
+        -9,
         370,
-        1794
+        1802
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -745,9 +745,9 @@
       "title": "Speak FR",
       "bounding": [
         1235,
-        -1,
+        -9,
         770,
-        454
+        462
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -757,9 +757,9 @@
       "title": "Speak ES",
       "bounding": [
         1235,
-        105,
+        547,
         770,
-        766
+        694
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -769,9 +769,9 @@
       "title": "Speak DE",
       "bounding": [
         1235,
-        211,
+        1335,
         770,
-        1078
+        926
       ],
       "color": "#3F789E",
       "font_size": 24,

@@ -167,7 +167,7 @@
       ],
       "size": [
         320,
-        88
+        188
       ],
       "flags": {},
       "order": 4,
@@ -203,11 +203,11 @@
       "type": "ShowText|pysssss",
       "pos": [
         1260,
-        198
+        298
       ],
       "size": [
         320,
-        88
+        188
       ],
       "flags": {},
       "order": 5,
@@ -286,9 +286,9 @@
       "title": "Setup",
       "bounding": [
         35,
-        -1,
+        -9,
         370,
-        174
+        182
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -298,9 +298,9 @@
       "title": "Code Gen",
       "bounding": [
         435,
-        -1,
+        -9,
         370,
-        390
+        398
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -310,9 +310,9 @@
       "title": "Explanation",
       "bounding": [
         835,
-        -1,
+        -9,
         370,
-        622
+        630
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -322,9 +322,9 @@
       "title": "Output",
       "bounding": [
         1235,
-        -1,
+        -9,
         370,
-        312
+        520
       ],
       "color": "#3F789E",
       "font_size": 24,

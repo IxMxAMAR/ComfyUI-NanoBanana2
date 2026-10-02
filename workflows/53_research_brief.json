@@ -208,11 +208,11 @@
       "type": "ShowText|pysssss",
       "pos": [
         1660,
-        60
+        666
       ],
       "size": [
         320,
-        88
+        188
       ],
       "flags": {},
       "order": 5,
@@ -248,11 +248,11 @@
       "type": "PreviewAudio",
       "pos": [
         1660,
-        198
+        342
       ],
       "size": [
         320,
-        56
+        136
       ],
       "flags": {},
       "order": 6,
@@ -335,9 +335,9 @@
       "title": "Setup",
       "bounding": [
         35,
-        -1,
+        -9,
         370,
-        174
+        182
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -347,9 +347,9 @@
       "title": "Research",
       "bounding": [
         435,
-        -1,
+        -9,
         370,
-        474
+        482
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -359,9 +359,9 @@
       "title": "Refine",
       "bounding": [
         835,
-        -1,
+        -9,
         370,
-        502
+        510
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -371,9 +371,9 @@
       "title": "Narrate",
       "bounding": [
         1235,
-        -1,
+        -9,
         770,
-        454
+        512
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -383,9 +383,9 @@
       "title": "Text Out",
       "bounding": [
         1635,
-        -1,
+        597,
         370,
-        174
+        282
       ],
       "color": "#3F789E",
       "font_size": 24,

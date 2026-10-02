@@ -175,7 +175,7 @@
       ],
       "size": [
         320,
-        56
+        436
       ],
       "flags": {},
       "order": 4,
@@ -199,7 +199,7 @@
       "type": "NanoBanana_ImageGen",
       "pos": [
         860,
-        682
+        956
       ],
       "size": [
         320,
@@ -273,11 +273,11 @@
       "type": "PreviewImage",
       "pos": [
         1260,
-        166
+        820
       ],
       "size": [
         320,
-        56
+        436
       ],
       "flags": {},
       "order": 6,
@@ -301,7 +301,7 @@
       "type": "NanoBanana_ImageGen",
       "pos": [
         860,
-        1304
+        1988
       ],
       "size": [
         320,
@@ -375,11 +375,11 @@
       "type": "PreviewImage",
       "pos": [
         1260,
-        272
+        1716
       ],
       "size": [
         320,
-        56
+        436
       ],
       "flags": {},
       "order": 8,
@@ -403,7 +403,7 @@
       "type": "NanoBanana_ImageGen",
       "pos": [
         860,
-        1926
+        3156
       ],
       "size": [
         320,
@@ -477,11 +477,11 @@
       "type": "PreviewImage",
       "pos": [
         1260,
-        378
+        2748
       ],
       "size": [
         320,
-        56
+        436
       ],
       "flags": {},
       "order": 10,
@@ -580,9 +580,9 @@
       "title": "Setup",
       "bounding": [
         35,
-        -1,
+        -9,
         370,
-        174
+        182
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -592,9 +592,9 @@
       "title": "Story",
       "bounding": [
         435,
-        -1,
+        -9,
         370,
-        622
+        630
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -604,9 +604,9 @@
       "title": "Paragraph 1",
       "bounding": [
         835,
-        -1,
+        -9,
         770,
-        658
+        666
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -616,9 +616,9 @@
       "title": "Paragraph 2",
       "bounding": [
         835,
-        105,
+        751,
         770,
-        1174
+        802
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -628,9 +628,9 @@
       "title": "Paragraph 3",
       "bounding": [
         835,
-        211,
+        1647,
         770,
-        1690
+        938
       ],
       "color": "#3F789E",
       "font_size": 24,
@@ -640,9 +640,9 @@
       "title": "Paragraph 4",
       "bounding": [
         835,
-        317,
+        2679,
         770,
-        2206
+        1074
       ],
       "color": "#3F789E",
       "font_size": 24,
